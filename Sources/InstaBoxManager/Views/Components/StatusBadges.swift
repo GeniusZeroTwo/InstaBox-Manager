@@ -1,5 +1,4 @@
 import SwiftUI
-import WebKit
 
 struct StateBadge: View {
     let state: MachineState
@@ -116,23 +115,5 @@ struct MetricCard: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .glassCard(cornerRadius: 20, tint: tint.opacity(0.06), interactive: true)
         .liquidHoverLift(scale: 1.016, liftY: -2.5, glowColor: tint)
-    }
-}
-
-struct RemoteDesktopWebView: NSViewRepresentable {
-    let url: URL
-
-    func makeNSView(context: Context) -> WKWebView {
-        let config = WKWebViewConfiguration()
-        config.preferences.javaScriptCanOpenWindowsAutomatically = true
-        let webView = WKWebView(frame: .zero, configuration: config)
-        webView.load(URLRequest(url: url))
-        return webView
-    }
-
-    func updateNSView(_ webView: WKWebView, context: Context) {
-        if webView.url != url {
-            webView.load(URLRequest(url: url))
-        }
     }
 }

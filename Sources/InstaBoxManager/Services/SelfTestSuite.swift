@@ -8,6 +8,7 @@ public enum SelfTestSuite {
             try verifyMachineAndUsageDecoding()
             try verifySSEStreamDecoding()
             try verifyErrorLocalization()
+            try verifyClipboardJSEscaping()
             print("PASS: All InstaBoxManager arm64 self-tests succeeded.")
             Foundation.exit(0)
         } catch {
@@ -127,5 +128,13 @@ public enum SelfTestSuite {
         let err = InstaBoxError.httpError(statusCode: 401, detail: detail)
         try expect(err.localizedDescription.contains("API Key 无效或不存在"), "Expected localized Chinese error message")
         print("  [OK] API error code localization")
+    }
+
+    private static func verifyClipboardJSEscaping() throws {
+        let sample = "Hello \"InstaBox\"\n中文复制\\测试"
+        let literal = SandboxClipboardSync.jsStringLiteral(sample)
+        try expect(literal.hasPrefix("\"") && literal.hasSuffix("\""), "Expected quoted JS string literal")
+        try expect(literal.contains("\\n") && literal.contains("\\\""), "Expected escaped newline and quote")
+        print("  [OK] Bidirectional clipboard JS literal escaping")
     }
 }

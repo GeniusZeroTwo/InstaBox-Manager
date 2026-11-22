@@ -22,8 +22,9 @@
 5. **一键免密打开 macOS 终端连接 SSH + 公网/私密端口暴露**
    - 一键签发临时 SSH Token 并直接拉起 `Terminal.app` 或 `iTerm2` 进入交互式 Shell（无繁琐密钥配置）。
    - 一键将沙盒内端口暴露为公开或私密（Token 保护）HTTPS 域名。
-6. **内嵌远程桌面（X11 / Wayland / Android 14）**
+6. **内嵌远程桌面（X11 / Wayland / Android 14）与双向剪贴板同步**
    - 支持检测、安装、启动云端图形桌面，并在面板内部通过原生 `WKWebView` 直接操控或生成临时分享链接。
+   - 内置 `WKWebView` 原生 `NSPasteboard` 剪贴板桥接 + X11/Wayland 后台实时双向同步，支持 Mac ⇄ 云端桌面自动复制粘贴与一键手动推送/拉取。
 7. **监控图表、进程管理、快照、Org Secrets & Webhooks + macOS 顶部菜单栏快捷面板**
    - 原生 Swift `Charts` 展示 CPU / 内存趋势、磁盘占用、进程列表与内核启动日志。
    - 常驻 macOS 顶部状态栏（`MenuBarExtra`），随时查看运行数量并一键启停或打开 SSH。

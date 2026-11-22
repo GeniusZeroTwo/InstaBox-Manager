@@ -94,6 +94,14 @@ struct ExecConsoleTab: View {
                             .transition(.scale(scale: 0.85).combined(with: .opacity))
                     }
 
+                    Button("复制输出") {
+                        TerminalLauncher.copyToClipboard(outputLog)
+                        store.showToast(.success, "终端输出已复制到剪贴板")
+                    }
+                    .buttonStyle(.glass)
+                    .controlSize(.small)
+                    .disabled(outputLog.isEmpty)
+
                     Button("清空输出") {
                         outputLog = ""
                         lastExitCode = nil
