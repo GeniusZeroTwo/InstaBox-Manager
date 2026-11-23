@@ -9,6 +9,7 @@ public enum SelfTestSuite {
             try verifySSEStreamDecoding()
             try verifyErrorLocalization()
             try verifyClipboardJSEscaping()
+            try verifyMCPProtocolEngine()
             print("PASS: All InstaBoxManager arm64 self-tests succeeded.")
             Foundation.exit(0)
         } catch {
@@ -136,5 +137,67 @@ public enum SelfTestSuite {
         try expect(literal.hasPrefix("\"") && literal.hasSuffix("\""), "Expected quoted JS string literal")
         try expect(literal.contains("\\n") && literal.contains("\\\""), "Expected escaped newline and quote")
         print("  [OK] Bidirectional clipboard JS literal escaping")
+    }
+
+    private static func verifyMCPProtocolEngine() throws {
+        let sem = DispatchSemaphore(value: 0)
+        var capturedError: Error?
+
+        Task {
+            do {
+                let engine = MCPServerEngine(clientProvider: { nil })
+
+                let initResp = await engine.handleRequestObject([
+                    "jsonrpc": "2.0",
+                    "id": 1,
+                    "method": "initialize",
+                    "params": ["protocolVersion": "2025-03-26"]
+                ])
+                try expect(initResp != nil, "Expected initialize response")
+                let initRes = initResp?["result"] as? [String: Any]
+                try expect((initRes?["protocolVersion"] as? String) == "2025-03-26", "Expected negotiated protocolVersion")
+
+                let notifResp = await engine.handleRequestObject([
+                    "jsonrpc": "2.0",
+                    "method": "notifications/initialized"
+                ])
+                try expect(notifResp == nil, "Notifications must not return a JSON-RPC response")
+
+                let toolsResp = await engine.handleRequestObject([
+                    "jsonrpc": "2.0",
+                    "id": 2,
+                    "method": "tools/list"
+                ])
+                let toolsResult = toolsResp?["result"] as? [String: Any]
+                let toolsList = toolsResult?["tools"] as? [[String: Any]] ?? []
+                try expect(toolsList.count == MCPServerEngine.toolCatalog.count && toolsList.count >= 18, "Expected 18 MCP tools")
+
+                let resResp = await engine.handleRequestObject([
+                    "jsonrpc": "2.0",
+                    "id": 3,
+                    "method": "resources/list"
+                ])
+                let resResult = resResp?["result"] as? [String: Any]
+                let resources = resResult?["resources"] as? [[String: Any]] ?? []
+                try expect(resources.count == 4, "Expected 4 MCP resources")
+
+                let errResp = await engine.handleRequestObject([
+                    "jsonrpc": "2.0",
+                    "id": 4,
+                    "method": "unknown/method"
+                ])
+                let errObj = errResp?["error"] as? [String: Any]
+                try expect((errObj?["code"] as? Int) == -32601, "Expected -32601 for unknown MCP method")
+            } catch {
+                capturedError = error
+            }
+            sem.signal()
+        }
+
+        sem.wait()
+        if let capturedError {
+            throw capturedError
+        }
+        print("  [OK] Native MCP JSON-RPC 2.0 protocol engine (18 tools, 4 resources)")
     }
 }

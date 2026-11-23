@@ -28,6 +28,10 @@
 7. **监控图表、进程管理、快照、Org Secrets & Webhooks + macOS 顶部菜单栏快捷面板**
    - 原生 Swift `Charts` 展示 CPU / 内存趋势、磁盘占用、进程列表与内核启动日志。
    - 常驻 macOS 顶部状态栏（`MenuBarExtra`），随时查看运行数量并一键启停或打开 SSH。
+8. **内置原生 MCP（Model Context Protocol）服务器（Stdio + 本地 Streamable HTTP）**
+   - 原生提供 18 个云端沙盒控制工具（启停/克隆/执行命令/读写文件/快照/端口暴露/SSH 令牌/监控诊断/剪贴板同步）与 4 个实时 MCP Resources。
+   - 支持 **Stdio 模式**（`InstaBoxManager --mcp`，自动安全复用 macOS 钥匙串 API Key，无需在配置里写明文密钥）与 **本地 Streamable HTTP 模式**（`http://127.0.0.1:28765/mcp`）。
+   - 应用内「MCP 服务」页面提供 Claude Desktop、Cursor、Antigravity、Claude Code CLI 一键配置写入、JSON-RPC 在线调试器与实时调用日志流。
 
 ## 编译与打包（仅限 Apple Silicon `arm64`）
 

@@ -21,6 +21,9 @@ struct InstaBoxManagerApp: App {
         if CommandLine.arguments.contains("--self-test") {
             SelfTestSuite.runAndExit()
         }
+        if CommandLine.arguments.contains("--mcp") {
+            MCPStdioRunner.runAndExit()
+        }
     }
 
     var body: some Scene {

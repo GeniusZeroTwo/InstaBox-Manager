@@ -8,6 +8,7 @@ public enum SidebarSection: Hashable, Identifiable {
     case snapshots
     case ports
     case secretsAndWebhooks
+    case mcpServer
     case addAccount
 
     public var id: Self { self }
@@ -19,6 +20,7 @@ public enum SidebarSection: Hashable, Identifiable {
         case .snapshots: return "快照镜像"
         case .ports: return "公网端口"
         case .secretsAndWebhooks: return "密钥与 Webhook"
+        case .mcpServer: return "MCP 服务"
         case .addAccount: return "切换 / 添加 API"
         }
     }
@@ -30,6 +32,7 @@ public enum SidebarSection: Hashable, Identifiable {
         case .snapshots: return "externaldrive.badge.timemachine"
         case .ports: return "network"
         case .secretsAndWebhooks: return "key.horizontal"
+        case .mcpServer: return "point.3.connected.trianglepath.dotted"
         case .addAccount: return "person.badge.key"
         }
     }
@@ -92,6 +95,28 @@ public final class AppStore {
         }
     }
 
+    // MCP Server State
+    public var mcpServerRunning = false
+    public var mcpServerError: String?
+    public var mcpLogs: [MCPLogEntry] = []
+    public var mcpServerPort: Int = 28765 {
+        didSet {
+            let clamped = min(max(mcpServerPort, 1024), 65535)
+            if clamped != mcpServerPort {
+                mcpServerPort = clamped
+                return
+            }
+            UserDefaults.standard.set(mcpServerPort, forKey: "instabox.mcp.port")
+        }
+    }
+    public var mcpAutoStart: Bool = false {
+        didSet {
+            UserDefaults.standard.set(mcpAutoStart, forKey: "instabox.mcp.autoStart")
+        }
+    }
+
+    private var mcpEngine: MCPServerEngine?
+    private var mcpHTTPServer: MCPHTTPServer?
     private var autoRefreshTask: Task<Void, Never>?
 
     public init() {
@@ -103,6 +128,11 @@ public final class AppStore {
            let pref = TerminalAppPreference(rawValue: termRaw) {
             self.preferredTerminal = pref
         }
+        let savedPort = UserDefaults.standard.integer(forKey: "instabox.mcp.port")
+        if (1024...65535).contains(savedPort) {
+            self.mcpServerPort = savedPort
+        }
+        self.mcpAutoStart = UserDefaults.standard.bool(forKey: "instabox.mcp.autoStart")
 
         self.profiles = KeychainService.loadProfiles()
         if let savedActive = KeychainService.loadActiveProfileID(),
@@ -120,6 +150,11 @@ public final class AppStore {
                 await refreshAll(silent: true)
                 restartAutoRefreshTask()
             }
+        }
+
+        setupMCPEngine()
+        if mcpAutoStart {
+            startMCPServer(silent: true)
         }
     }
 
@@ -514,5 +549,123 @@ public final class AppStore {
         } catch {
             showToast(.error, error.localizedDescription)
         }
+    }
+
+    // MARK: - MCP Server Control & Playground
+
+    public var mcpExecutablePath: String {
+        if let exec = Bundle.main.executablePath, !exec.isEmpty {
+            return exec
+        }
+        return "/Applications/InstaBox Manager.app/Contents/MacOS/InstaBoxManager"
+    }
+
+    public var mcpHTTPEndpoint: String {
+        "http://127.0.0.1:\(mcpServerPort)/mcp"
+    }
+
+    public var activeRawAPIKeyForMCPConfig: String? {
+        guard let activeProfileID else { return nil }
+        return KeychainService.loadAPIKey(for: activeProfileID)
+    }
+
+    private func setupMCPEngine() {
+        let engine = MCPServerEngine(
+            clientProvider: { MCPServerEngine.defaultClientProvider() },
+            activityHandler: { [weak self] entry in
+                let target = self
+                await MainActor.run {
+                    guard let target else { return }
+                    target.mcpLogs.insert(entry, at: 0)
+                    if target.mcpLogs.count > 80 {
+                        target.mcpLogs.removeLast(target.mcpLogs.count - 80)
+                    }
+                }
+            }
+        )
+        self.mcpEngine = engine
+        self.mcpHTTPServer = MCPHTTPServer(engine: engine)
+    }
+
+    public func startMCPServer(silent: Bool = false) {
+        if mcpHTTPServer == nil {
+            setupMCPEngine()
+        }
+        guard let server = mcpHTTPServer else { return }
+        mcpServerError = nil
+        do {
+            try server.start(port: UInt16(mcpServerPort)) { [weak self] running, errMsg in
+                Task { @MainActor [weak self] in
+                    guard let self else { return }
+                    self.mcpServerRunning = running
+                    self.mcpServerError = errMsg
+                    if let errMsg, !silent {
+                        self.showToast(.error, errMsg)
+                    } else if running && !silent {
+                        self.showToast(.success, "本地 HTTP MCP 服务已启动（127.0.0.1:\(self.mcpServerPort)/mcp）")
+                    }
+                }
+            }
+        } catch {
+            mcpServerRunning = false
+            mcpServerError = error.localizedDescription
+            if !silent {
+                showToast(.error, "启动 MCP 服务失败：\(error.localizedDescription)")
+            }
+        }
+    }
+
+    public func stopMCPServer(silent: Bool = false) {
+        mcpHTTPServer?.stop()
+        mcpServerRunning = false
+        if !silent {
+            showToast(.info, "本地 HTTP MCP 服务已停止")
+        }
+    }
+
+    public func toggleMCPServer() {
+        if mcpServerRunning {
+            stopMCPServer()
+        } else {
+            startMCPServer()
+        }
+    }
+
+    public func clearMCPLogs() {
+        mcpLogs.removeAll()
+    }
+
+    public func runMCPPlayground(toolName: String, argumentsJSON: String) async -> String {
+        if mcpEngine == nil {
+            setupMCPEngine()
+        }
+        guard let engine = mcpEngine else { return "{}" }
+
+        var argsObj: [String: Any] = [:]
+        let trimmed = argumentsJSON.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !trimmed.isEmpty {
+            guard let data = trimmed.data(using: .utf8),
+                  let parsed = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+                return "{\"error\": \"参数 JSON 格式无效，请传入合法 JSON 对象（如 {}）\"}"
+            }
+            argsObj = parsed
+        }
+
+        let rpcReq: [String: Any] = [
+            "jsonrpc": "2.0",
+            "id": Int(Date().timeIntervalSince1970),
+            "method": "tools/call",
+            "params": [
+                "name": toolName,
+                "arguments": argsObj
+            ]
+        ]
+
+        guard let resp = await engine.handleRequestObject(rpcReq, transport: "Playground"),
+              let outData = try? JSONSerialization.data(withJSONObject: resp, options: [.prettyPrinted, .sortedKeys]),
+              let outStr = String(data: outData, encoding: .utf8) else {
+            return "{}"
+        }
+        return outStr
     }
 }

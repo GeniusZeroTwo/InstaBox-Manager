@@ -22,7 +22,8 @@ let package = Package(
                 .linkedFramework("SwiftUI"),
                 .linkedFramework("Security"),
                 .linkedFramework("WebKit"),
-                .linkedFramework("Charts")
+                .linkedFramework("Charts"),
+                .linkedFramework("Network")
             ]
         )
     ]

@@ -120,7 +120,7 @@ struct RemoteDesktopWebView: NSViewRepresentable {
                     let text = SandboxClipboardSync.readLocalText() ?? ""
                     let jsId = SandboxClipboardSync.jsStringLiteral(requestId)
                     let jsText = SandboxClipboardSync.jsStringLiteral(text)
-                    self.webView?.evaluateJavaScript("window.__instaboxResolveClipboardRead && window.__instaboxResolveClipboardRead(\(jsId), \(jsText));", completionHandler: nil)
+                    _ = try? await self.webView?.evaluateJavaScript("window.__instaboxResolveClipboardRead && window.__instaboxResolveClipboardRead(\(jsId), \(jsText));")
                 default:
                     break
                 }

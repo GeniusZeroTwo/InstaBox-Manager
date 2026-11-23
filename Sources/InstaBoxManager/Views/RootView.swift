@@ -158,6 +158,16 @@ struct RootView: View {
                 NavigationLink(value: SidebarSection.secretsAndWebhooks) {
                     Label(SidebarSection.secretsAndWebhooks.title, systemImage: SidebarSection.secretsAndWebhooks.icon)
                 }
+
+                NavigationLink(value: SidebarSection.mcpServer) {
+                    HStack {
+                        Label(SidebarSection.mcpServer.title, systemImage: SidebarSection.mcpServer.icon)
+                        Spacer()
+                        if store.mcpServerRunning {
+                            LivePulseDot(color: .green, isPulsing: true, size: 7)
+                        }
+                    }
+                }
             }
 
             Section("API 账户") {
@@ -237,6 +247,8 @@ struct RootView: View {
             PortsOverviewView()
         case .secretsAndWebhooks:
             SecretsAndWebhooksView()
+        case .mcpServer:
+            MCPServerView()
         case .addAccount:
             APILoginView(isAddingAdditional: true)
         }
