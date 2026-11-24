@@ -40,14 +40,15 @@ struct SecretsAndWebhooksView: View {
         VStack(alignment: .leading, spacing: 14) {
             HStack {
                 HStack(spacing: 10) {
-                    GlassIconOrb(systemImage: "lock.rectangle.stack", tint: .indigo, size: 32, iconSize: 15, cornerRadius: 10)
+                    GlassIconOrb(systemImage: "lock.rectangle.stack", tint: LiquidPalette.statusIndigo, size: 32, iconSize: 15, cornerRadius: 10)
                     Text("组织级机密凭据 (Org Secrets)")
                         .font(.title3.bold())
+                        .foregroundStyle(LiquidPalette.textPrimary)
                 }
                 Spacer()
                 Text("仅存储密文摘要，永不回显明文")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .font(.caption.weight(.medium))
+                    .foregroundStyle(LiquidPalette.textSecondary)
                     .padding(.horizontal, 9)
                     .padding(.vertical, 3)
                     .glassPill()
@@ -57,6 +58,7 @@ struct SecretsAndWebhooksView: View {
                 TextField("名称 (如 OPENAI_API_KEY)", text: $secretName)
                     .textFieldStyle(.plain)
                     .font(.caption.monospaced())
+                    .foregroundStyle(LiquidPalette.textPrimary)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 7)
                     .glassWell(cornerRadius: 9)
@@ -64,6 +66,7 @@ struct SecretsAndWebhooksView: View {
 
                 SecureField("密钥明文值…", text: $secretValue)
                     .textFieldStyle(.plain)
+                    .foregroundStyle(LiquidPalette.textPrimary)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 7)
                     .glassWell(cornerRadius: 9)
@@ -79,6 +82,7 @@ struct SecretsAndWebhooksView: View {
                     TextField("允许域名 (逗号分隔或 *)", text: $secretHostsText)
                         .textFieldStyle(.plain)
                         .font(.caption.monospaced())
+                        .foregroundStyle(LiquidPalette.textPrimary)
                         .padding(.horizontal, 10)
                         .padding(.vertical, 7)
                         .glassWell(cornerRadius: 9)
@@ -95,27 +99,29 @@ struct SecretsAndWebhooksView: View {
             if store.secrets.isEmpty {
                 Text("当前工作区暂无已配置的 Org Secret（注意：免费版需付费套餐或开启 orgSecrets 权限方可使用）。")
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(LiquidPalette.textSecondary)
                     .padding(.vertical, 6)
             } else {
                 ForEach(store.secrets) { sec in
                     HStack(spacing: 10) {
                         Text(sec.name)
                             .font(.subheadline.monospaced().bold())
+                            .foregroundStyle(LiquidPalette.textPrimary)
                         Text(sec.delivery)
                             .font(.caption2.weight(.semibold))
+                            .foregroundStyle(LiquidPalette.statusIndigo)
                             .padding(.horizontal, 7)
                             .padding(.vertical, 2)
-                            .glassPill(tint: .indigo.opacity(0.18))
+                            .glassPill(tint: LiquidPalette.statusIndigo)
                         if !sec.hosts.isEmpty {
                             Text("Hosts: \(sec.hosts.joined(separator: ", "))")
                                 .font(.caption2.monospaced())
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(LiquidPalette.textSecondary)
                         }
                         Spacer()
                         Text("v\(sec.version) · \(sec.size)B")
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
+                            .font(.caption2.monospacedDigit())
+                            .foregroundStyle(LiquidPalette.textMuted)
                         Button(role: .destructive) {
                             deleteSecret(sec.name)
                         } label: {
@@ -125,7 +131,7 @@ struct SecretsAndWebhooksView: View {
                         .controlSize(.small)
                     }
                     .padding(11)
-                    .glassWell(cornerRadius: 11)
+                    .liquidWellInteractive(cornerRadius: 11)
                 }
             }
         }
@@ -138,21 +144,24 @@ struct SecretsAndWebhooksView: View {
     private var webhooksSection: some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack(spacing: 10) {
-                GlassIconOrb(systemImage: "antenna.radiowaves.left.and.right", tint: .teal, size: 32, iconSize: 15, cornerRadius: 10)
+                GlassIconOrb(systemImage: "antenna.radiowaves.left.and.right", tint: LiquidPalette.statusTeal, size: 32, iconSize: 15, cornerRadius: 10)
                 Text("生命周期事件 Webhook")
                     .font(.title3.bold())
+                    .foregroundStyle(LiquidPalette.textPrimary)
             }
 
             HStack(spacing: 10) {
                 TextField("https://example.com/webhooks/instabox", text: $webhookURL)
                     .textFieldStyle(.plain)
                     .font(.caption.monospaced())
+                    .foregroundStyle(LiquidPalette.textPrimary)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 7)
                     .glassWell(cornerRadius: 9)
 
                 TextField("备注说明（可选）", text: $webhookDesc)
                     .textFieldStyle(.plain)
+                    .foregroundStyle(LiquidPalette.textPrimary)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 7)
                     .glassWell(cornerRadius: 9)
@@ -167,11 +176,12 @@ struct SecretsAndWebhooksView: View {
 
             HStack(spacing: 8) {
                 Text("订阅事件（逗号分隔）：")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .font(.caption.weight(.medium))
+                    .foregroundStyle(LiquidPalette.textSecondary)
                 TextField("事件列表", text: $selectedEventsText)
                     .textFieldStyle(.plain)
                     .font(.caption.monospaced())
+                    .foregroundStyle(LiquidPalette.textPrimary)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 6)
                     .glassWell(cornerRadius: 8)
@@ -180,18 +190,19 @@ struct SecretsAndWebhooksView: View {
             if store.webhooks.isEmpty {
                 Text("当前工作区未注册任何 Webhook 回调端点。")
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(LiquidPalette.textSecondary)
                     .padding(.vertical, 6)
             } else {
                 ForEach(store.webhooks) { wh in
                     HStack(spacing: 10) {
-                        LivePulseDot(color: wh.enabled ? .green : .secondary, isPulsing: wh.enabled, size: 8)
+                        LivePulseDot(color: wh.enabled ? LiquidPalette.statusGreen : LiquidPalette.statusNeutral, isPulsing: wh.enabled, size: 8)
                         VStack(alignment: .leading, spacing: 2) {
                             Text(wh.url)
                                 .font(.caption.monospaced().bold())
+                                .foregroundStyle(LiquidPalette.textPrimary)
                             Text("事件：\(wh.events.joined(separator: ", "))")
                                 .font(.caption2)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(LiquidPalette.textSecondary)
                         }
                         Spacer()
                         Button("发送测试") {

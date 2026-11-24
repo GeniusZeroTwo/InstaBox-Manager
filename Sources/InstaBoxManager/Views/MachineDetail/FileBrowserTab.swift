@@ -39,9 +39,11 @@ struct FileBrowserTab: View {
                     TextField("/data/home", text: $currentPath)
                         .textFieldStyle(.plain)
                         .font(.system(.subheadline, design: .monospaced))
+                        .foregroundStyle(LiquidPalette.textPrimary)
                         .padding(.horizontal, 10)
                         .padding(.vertical, 6)
                         .glassWell(cornerRadius: 9)
+                        .frame(minWidth: 140)
                         .onSubmit {
                             loadDirectory(currentPath)
                         }
@@ -54,7 +56,7 @@ struct FileBrowserTab: View {
                         }
                     }
                     .buttonStyle(.glass)
-                    .frame(width: 98)
+                    .fixedSize()
 
                     Button {
                         loadDirectory(currentPath)
@@ -70,9 +72,11 @@ struct FileBrowserTab: View {
                         newItemName = ""
                         showNewFolderSheet = true
                     } label: {
-                        Label("新建文件夹", systemImage: "folder.badge.plus")
+                        Label("新建目录", systemImage: "folder.badge.plus")
+                            .lineLimit(1)
                     }
                     .buttonStyle(.glass)
+                    .fixedSize()
 
                     Button {
                         newItemIsFile = true
@@ -80,15 +84,19 @@ struct FileBrowserTab: View {
                         showNewFolderSheet = true
                     } label: {
                         Label("新建文件", systemImage: "doc.badge.plus")
+                            .lineLimit(1)
                     }
                     .buttonStyle(.glass)
+                    .fixedSize()
 
                     Button {
                         uploadFileWithOpenPanel()
                     } label: {
-                        Label("上传文件", systemImage: "square.and.arrow.up")
+                        Label("上传", systemImage: "square.and.arrow.up")
+                            .lineLimit(1)
                     }
                     .buttonStyle(.glassProminent)
+                    .fixedSize()
                 }
                 .padding(12)
                 .glassCard(cornerRadius: 16, elevated: false)
@@ -126,34 +134,35 @@ struct FileBrowserTab: View {
                         ForEach(sortedEntries) { entry in
                             HStack(spacing: 10) {
                                 Image(systemName: iconForEntry(entry))
-                                    .foregroundStyle(entry.isDirectory ? Color.accentColor : .secondary)
+                                    .foregroundStyle(entry.isDirectory ? LiquidPalette.statusBlue : LiquidPalette.textSecondary)
                                     .frame(width: 20)
 
                                 Text(entry.name)
                                     .font(.system(.subheadline, design: .monospaced))
-                                    .fontWeight(entry.isDirectory ? .medium : .regular)
+                                    .fontWeight(entry.isDirectory ? .semibold : .regular)
+                                    .foregroundStyle(LiquidPalette.textPrimary)
                                     .lineLimit(1)
 
                                 if let target = entry.target {
                                     Text("→ \(target)")
                                         .font(.caption2.monospaced())
-                                        .foregroundStyle(.secondary)
+                                        .foregroundStyle(LiquidPalette.textSecondary)
                                 }
 
                                 Spacer()
 
                                 Text(entry.mode)
                                     .font(.caption2.monospaced())
-                                    .foregroundStyle(.tertiary)
+                                    .foregroundStyle(LiquidPalette.textMuted)
 
                                 Text(entry.isDirectory ? "目录" : Formatters.bytes(entry.size))
                                     .font(.caption.monospacedDigit())
-                                    .foregroundStyle(.secondary)
+                                    .foregroundStyle(LiquidPalette.textSecondary)
                                     .frame(width: 85, alignment: .trailing)
 
                                 Text(Formatters.relativeOrShortTime(entry.modTime))
                                     .font(.caption2)
-                                    .foregroundStyle(.secondary)
+                                    .foregroundStyle(LiquidPalette.textMuted)
                                     .frame(width: 80, alignment: .trailing)
 
                                 HStack(spacing: 6) {
@@ -358,9 +367,10 @@ struct FileBrowserTab: View {
             VStack(alignment: .leading, spacing: 12) {
                 HStack {
                     HStack(spacing: 8) {
-                        GlassIconOrb(systemImage: "doc.text", tint: .accentColor, size: 28, iconSize: 13, cornerRadius: 8)
+                        GlassIconOrb(systemImage: "doc.text", tint: LiquidPalette.statusBlue, size: 28, iconSize: 13, cornerRadius: 8)
                         Text(editingFilePath ?? "")
                             .font(.subheadline.monospaced().bold())
+                            .foregroundStyle(LiquidPalette.textPrimary)
                             .lineLimit(1)
                     }
                     Spacer()
@@ -412,17 +422,19 @@ struct FileBrowserTab: View {
                 HStack(spacing: 8) {
                     GlassIconOrb(
                         systemImage: newItemIsFile ? "doc.badge.plus" : "folder.badge.plus",
-                        tint: .accentColor,
+                        tint: LiquidPalette.statusBlue,
                         size: 28,
                         iconSize: 13,
                         cornerRadius: 8
                     )
                     Text(newItemIsFile ? "新建空文件" : "新建文件夹")
                         .font(.headline)
+                        .foregroundStyle(LiquidPalette.textPrimary)
                 }
 
                 TextField("名称", text: $newItemName)
                     .textFieldStyle(.plain)
+                    .foregroundStyle(LiquidPalette.textPrimary)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 8)
                     .glassWell(cornerRadius: 10)

@@ -9,6 +9,12 @@ struct SettingsView: View {
 
         Form {
             Section("偏好设置") {
+                Picker("外观主题", selection: $bindableStore.appearanceMode) {
+                    ForEach(AppAppearanceMode.allCases) { mode in
+                        Text(mode.displayName).tag(mode)
+                    }
+                }
+
                 Picker("后台自动刷新频率", selection: $bindableStore.autoRefreshSeconds) {
                     Text("每 5 秒").tag(5)
                     Text("每 15 秒（推荐）").tag(15)
@@ -27,15 +33,17 @@ struct SettingsView: View {
             Section("已保存的 API 密钥（钥匙串加密）") {
                 if store.profiles.isEmpty {
                     Text("暂未保存任何 API Key")
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(LiquidPalette.textSecondary)
                 } else {
                     ForEach(store.profiles) { p in
                         HStack {
                             VStack(alignment: .leading, spacing: 2) {
-                                Text(p.name).fontWeight(.medium)
+                                Text(p.name)
+                                    .fontWeight(.semibold)
+                                    .foregroundStyle(LiquidPalette.textPrimary)
                                 Text("\(p.keyPrefix) · \(p.normalizedBaseURL)")
                                     .font(.caption.monospaced())
-                                    .foregroundStyle(.secondary)
+                                    .foregroundStyle(LiquidPalette.textMuted)
                             }
                             Spacer()
                             if p.id == store.activeProfileID {
@@ -43,8 +51,8 @@ struct SettingsView: View {
                                     .font(.caption2.weight(.semibold))
                                     .padding(.horizontal, 7)
                                     .padding(.vertical, 2)
-                                    .foregroundStyle(.green)
-                                    .glassPill(tint: .green.opacity(0.20))
+                                    .foregroundStyle(LiquidPalette.statusGreen)
+                                    .glassPill(tint: LiquidPalette.statusGreen)
                             } else {
                                 Button("切换") {
                                     store.switchProfile(p)
@@ -87,9 +95,10 @@ struct MenuBarContentView: View {
         GlassEffectContainer(spacing: 10) {
             VStack(alignment: .leading, spacing: 10) {
                 HStack(spacing: 9) {
-                    GlassIconOrb(systemImage: "cube.transparent.fill", tint: .accentColor, size: 28, iconSize: 13, cornerRadius: 9)
+                    GlassIconOrb(systemImage: "cube.transparent.fill", tint: LiquidPalette.statusBlue, size: 28, iconSize: 13, cornerRadius: 9)
                     Text(store.activeProfile?.name ?? "InstaBox 管理面板")
                         .font(.headline)
+                        .foregroundStyle(LiquidPalette.textPrimary)
                         .lineLimit(1)
                     Spacer()
                     if store.isConnected {
@@ -105,15 +114,15 @@ struct MenuBarContentView: View {
 
                 if !store.isConnected {
                     Text("尚未绑定 API Key")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .font(.caption.weight(.medium))
+                        .foregroundStyle(LiquidPalette.textSecondary)
                         .frame(maxWidth: .infinity, alignment: .center)
                         .padding(.vertical, 12)
                         .glassWell(cornerRadius: 10)
                 } else if store.machines.isEmpty {
                     Text("当前工作区暂无沙盒实例")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .font(.caption.weight(.medium))
+                        .foregroundStyle(LiquidPalette.textSecondary)
                         .frame(maxWidth: .infinity, alignment: .center)
                         .padding(.vertical, 12)
                         .glassWell(cornerRadius: 10)
@@ -122,18 +131,21 @@ struct MenuBarContentView: View {
                         ForEach(store.machines.prefix(8)) { m in
                             HStack(spacing: 8) {
                                 LivePulseDot(
-                                    color: m.state == .running ? .green : (m.state == .suspended ? .indigo : .secondary),
+                                    color: m.state == .running
+                                        ? LiquidPalette.statusGreen
+                                        : (m.state == .suspended ? LiquidPalette.statusIndigo : LiquidPalette.statusNeutral),
                                     isPulsing: m.state == .running,
                                     size: 8
                                 )
 
                                 VStack(alignment: .leading, spacing: 1) {
                                     Text(m.name)
-                                        .font(.subheadline.weight(.medium))
+                                        .font(.subheadline.weight(.semibold))
+                                        .foregroundStyle(LiquidPalette.textPrimary)
                                         .lineLimit(1)
                                     Text(m.state.displayName)
-                                        .font(.caption2)
-                                        .foregroundStyle(.secondary)
+                                        .font(.caption2.weight(.medium))
+                                        .foregroundStyle(LiquidPalette.textSecondary)
                                 }
 
                                 Spacer()
@@ -155,14 +167,14 @@ struct MenuBarContentView: View {
                                         Task { await store.resumeMachine(m) }
                                     }
                                     .buttonStyle(.glassProminent)
-                                    .tint(.indigo)
+                                    .tint(LiquidPalette.prominentIndigo.color)
                                     .controlSize(.mini)
                                 } else if m.state == .stopped {
                                     Button("启动") {
                                         Task { await store.startMachine(m) }
                                     }
                                     .buttonStyle(.glassProminent)
-                                    .tint(.green)
+                                    .tint(LiquidPalette.prominentGreen.color)
                                     .controlSize(.mini)
                                 }
                             }

@@ -13,7 +13,7 @@ struct SnapshotsView: View {
                 HStack(spacing: 14) {
                     GlassIconOrb(
                         systemImage: "externaldrive.fill.badge.timemachine",
-                        tint: .purple,
+                        tint: LiquidPalette.statusPurple,
                         size: 40,
                         iconSize: 18,
                         cornerRadius: 13
@@ -21,10 +21,11 @@ struct SnapshotsView: View {
 
                     VStack(alignment: .leading, spacing: 4) {
                         Text("快照镜像")
-                            .font(.title3.weight(.semibold))
+                            .font(.title3.weight(.bold))
+                            .foregroundStyle(LiquidPalette.textPrimary)
                         Text("浏览快照文件系统，或基于任意快照秒级克隆启动新沙盒。")
                             .font(.subheadline)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(LiquidPalette.textSecondary)
                     }
                     Spacer()
                     Button {
@@ -35,7 +36,7 @@ struct SnapshotsView: View {
                     .buttonStyle(.glass)
                 }
                 .padding(18)
-                .glassCard(cornerRadius: 20, tint: .purple.opacity(0.05))
+                .glassCard(cornerRadius: 20, tint: LiquidPalette.statusPurple.opacity(0.05))
             }
             .padding([.horizontal, .top], 14)
 
@@ -56,7 +57,7 @@ struct SnapshotsView: View {
                                 HStack(spacing: 14) {
                                     GlassIconOrb(
                                         systemImage: "externaldrive.fill.badge.timemachine",
-                                        tint: .purple,
+                                        tint: LiquidPalette.statusPurple,
                                         size: 38,
                                         iconSize: 16,
                                         cornerRadius: 12
@@ -66,13 +67,14 @@ struct SnapshotsView: View {
                                         HStack(spacing: 8) {
                                             Text(snap.name)
                                                 .font(.body.weight(.semibold))
+                                                .foregroundStyle(LiquidPalette.textPrimary)
                                             statusPill(snap.status)
                                             if snap.sizeLocked == true {
                                                 Text("规格锁定")
-                                                    .font(.caption2.weight(.medium))
-                                                    .padding(.horizontal, 6)
+                                                    .font(.caption2.weight(.semibold))
+                                                    .padding(.horizontal, 7)
                                                     .padding(.vertical, 2)
-                                                    .foregroundStyle(.secondary)
+                                                    .foregroundStyle(LiquidPalette.textSecondary)
                                                     .glassPill()
                                             }
                                         }
@@ -80,24 +82,24 @@ struct SnapshotsView: View {
                                         HStack(spacing: 10) {
                                             Text(snap.id)
                                                 .font(.caption2.monospaced())
-                                                .foregroundStyle(.secondary)
+                                                .foregroundStyle(LiquidPalette.textMuted)
                                             Text("· 模板 \(snap.template.id)")
-                                                .font(.caption2)
-                                                .foregroundStyle(.secondary)
+                                                .font(.caption2.weight(.medium))
+                                                .foregroundStyle(LiquidPalette.textSecondary)
                                             if let excl = snap.exclusiveBytes {
                                                 Text("· 占用 \(Formatters.bytes(excl))")
-                                                    .font(.caption2)
-                                                    .foregroundStyle(.secondary)
+                                                    .font(.caption2.weight(.medium))
+                                                    .foregroundStyle(LiquidPalette.textSecondary)
                                             }
                                             Text("· \(Formatters.relativeOrShortTime(snap.createdAt))")
                                                 .font(.caption2)
-                                                .foregroundStyle(.secondary)
+                                                .foregroundStyle(LiquidPalette.textMuted)
                                         }
 
                                         if let desc = snap.description, !desc.isEmpty {
                                             Text(desc)
                                                 .font(.caption)
-                                                .foregroundStyle(.secondary)
+                                                .foregroundStyle(LiquidPalette.textSecondary)
                                         }
                                     }
 
@@ -134,7 +136,7 @@ struct SnapshotsView: View {
                                 }
                                 .padding(16)
                                 .glassCard(cornerRadius: 18, interactive: true)
-                                .liquidHoverLift(scale: 1.008, liftY: -1.5, glowColor: .purple)
+                                .liquidHoverLift(liftY: -1.5, glowColor: LiquidPalette.statusPurple)
                             }
                         }
                         .padding(.horizontal, 14)
@@ -154,12 +156,14 @@ struct SnapshotsView: View {
             GlassEffectContainer {
                 VStack(alignment: .leading, spacing: 14) {
                     HStack(spacing: 8) {
-                        GlassIconOrb(systemImage: "plus.square.on.square", tint: .purple, size: 30, iconSize: 14, cornerRadius: 9)
+                        GlassIconOrb(systemImage: "plus.square.on.square", tint: LiquidPalette.statusPurple, size: 30, iconSize: 14, cornerRadius: 9)
                         Text("从快照「\(snap.name)」创建沙盒")
                             .font(.headline)
+                            .foregroundStyle(LiquidPalette.textPrimary)
                     }
                     TextField("新沙盒名称", text: $newSandboxName)
                         .textFieldStyle(.plain)
+                        .foregroundStyle(LiquidPalette.textPrimary)
                         .padding(.horizontal, 10)
                         .padding(.vertical, 8)
                         .glassWell(cornerRadius: 10)
@@ -199,13 +203,15 @@ struct SnapshotsView: View {
     }
 
     private func statusPill(_ status: String) -> some View {
-        let color: Color = status == "ready" ? .green : (status == "pending" ? .orange : .red)
+        let color: Color = status == "ready"
+            ? LiquidPalette.statusGreen
+            : (status == "pending" ? LiquidPalette.statusOrange : LiquidPalette.statusRed)
         return Text(status)
             .font(.caption2.weight(.semibold))
             .padding(.horizontal, 7)
             .padding(.vertical, 2)
             .foregroundStyle(color)
-            .glassPill(tint: color.opacity(0.20))
+            .glassPill(tint: color)
     }
 
     private func createBox(from snap: SnapshotItem) {
@@ -261,9 +267,10 @@ private struct SnapshotFileInspectorSheet: View {
             VStack(spacing: 10) {
                 HStack {
                     HStack(spacing: 8) {
-                        GlassIconOrb(systemImage: "folder", tint: .purple, size: 28, iconSize: 13, cornerRadius: 8)
+                        GlassIconOrb(systemImage: "folder", tint: LiquidPalette.statusPurple, size: 28, iconSize: 13, cornerRadius: 8)
                         Text("快照文件浏览：\(snapshot.name)")
                             .font(.headline)
+                            .foregroundStyle(LiquidPalette.textPrimary)
                     }
                     Spacer()
                     Button("关闭") { dismiss() }
@@ -283,6 +290,7 @@ private struct SnapshotFileInspectorSheet: View {
                     TextField("/", text: $path)
                         .textFieldStyle(.plain)
                         .font(.caption.monospaced())
+                        .foregroundStyle(LiquidPalette.textPrimary)
                         .padding(.horizontal, 10)
                         .padding(.vertical, 6)
                         .glassWell(cornerRadius: 9)
@@ -317,13 +325,14 @@ private struct SnapshotFileInspectorSheet: View {
                     List(entries) { entry in
                         HStack {
                             Image(systemName: entry.isDirectory ? "folder.fill" : "doc.text")
-                                .foregroundStyle(entry.isDirectory ? Color.accentColor : .secondary)
+                                .foregroundStyle(entry.isDirectory ? LiquidPalette.statusBlue : LiquidPalette.textSecondary)
                             Text(entry.name)
                                 .font(.caption.monospaced())
+                                .foregroundStyle(LiquidPalette.textPrimary)
                             Spacer()
                             Text(entry.isDirectory ? "目录" : Formatters.bytes(entry.size))
                                 .font(.caption2)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(LiquidPalette.textMuted)
                         }
                         .contentShape(Rectangle())
                         .onTapGesture(count: 2) {

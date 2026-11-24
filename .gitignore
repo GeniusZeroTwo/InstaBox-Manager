@@ -6,3 +6,5 @@ DerivedData/
 .swiftpm/
 dist/
 *.xcodeproj
+__pycache__/
+*.pyc

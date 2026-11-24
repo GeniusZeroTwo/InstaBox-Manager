@@ -55,15 +55,16 @@ struct MachinesView: View {
                     VStack(spacing: 8) {
                         HStack(spacing: 8) {
                             Image(systemName: "magnifyingglass")
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(LiquidPalette.textSecondary)
                             TextField("搜索名称、ID 或模板…", text: $searchText)
                                 .textFieldStyle(.plain)
+                                .foregroundStyle(LiquidPalette.textPrimary)
                             if !searchText.isEmpty {
                                 Button {
                                     searchText = ""
                                 } label: {
                                     Image(systemName: "xmark.circle.fill")
-                                        .foregroundStyle(.secondary)
+                                        .foregroundStyle(LiquidPalette.textSecondary)
                                 }
                                 .buttonStyle(.plain)
                                 .help("清除搜索")
@@ -231,18 +232,23 @@ private struct MachineRowView: View {
 
     @ViewState private var isHovered = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.backgroundProminence) private var backgroundProminence
 
     private var orbTint: Color {
-        if operation != nil || machine.state.isTransitioning { return .orange }
+        if operation != nil || machine.state.isTransitioning { return LiquidPalette.statusOrange }
         switch machine.state {
-        case .running: return .green
-        case .suspended: return .indigo
-        case .error: return .red
-        default: return .accentColor
+        case .running: return LiquidPalette.statusGreen
+        case .suspended: return LiquidPalette.statusIndigo
+        case .error: return LiquidPalette.statusRed
+        default: return LiquidPalette.statusBlue
         }
     }
 
     var body: some View {
+        let primaryText = LiquidPalette.rowPrimary(prominence: backgroundProminence)
+        let secondaryText = LiquidPalette.rowSecondary(prominence: backgroundProminence)
+        let mutedText = LiquidPalette.rowMuted(prominence: backgroundProminence)
+
         HStack(alignment: .top, spacing: 11) {
             GlassIconOrb(
                 systemImage: "cube.transparent.fill",
@@ -251,13 +257,13 @@ private struct MachineRowView: View {
                 iconSize: 15,
                 cornerRadius: 11
             )
-            .scaleEffect(isHovered && !reduceMotion ? 1.07 : 1.0)
             .shadow(color: isHovered ? orbTint.opacity(0.32) : .clear, radius: 8)
 
             VStack(alignment: .leading, spacing: 6) {
                 HStack(alignment: .center, spacing: 6) {
                     Text(machine.name)
                         .font(.body.weight(.semibold))
+                        .foregroundStyle(primaryText)
                         .lineLimit(1)
                         .help(machine.name)
                     Spacer(minLength: 0)
@@ -267,7 +273,7 @@ private struct MachineRowView: View {
 
                 HStack(spacing: 6) {
                     Text(machine.template.id)
-                        .font(.caption.weight(.medium))
+                        .font(.caption.weight(.semibold))
                         .lineLimit(1)
                     Text("· \(machine.spec.displayLabel)")
                         .font(.caption)
@@ -278,19 +284,24 @@ private struct MachineRowView: View {
                             .fixedSize()
                     }
                 }
-                .foregroundStyle(.secondary)
+                .foregroundStyle(secondaryText)
 
                 HStack {
                     Text(machine.id)
                         .font(.caption2.monospaced())
-                        .foregroundStyle(.tertiary)
+                        .foregroundStyle(mutedText)
                         .lineLimit(1)
+                        .truncationMode(.middle)
                         .help(machine.id)
-                    Spacer(minLength: 0)
+                    Spacer(minLength: 4)
                     if let oom = machine.oomKills, oom > 0 {
                         Label("OOM:\(oom)", systemImage: "exclamationmark.triangle.fill")
                             .font(.caption2.weight(.semibold))
-                            .foregroundStyle(.orange)
+                            .foregroundStyle(LiquidPalette.statusOrange)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 1.5)
+                            .glassPill(tint: LiquidPalette.statusOrange)
+                            .fixedSize()
                     }
                 }
             }

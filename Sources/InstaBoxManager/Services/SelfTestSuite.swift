@@ -10,6 +10,8 @@ public enum SelfTestSuite {
             try verifyErrorLocalization()
             try verifyClipboardJSEscaping()
             try verifyMCPProtocolEngine()
+            try verifyTypographyContrastWCAG()
+            try verifyBillingQuotaMetrics()
             print("PASS: All InstaBoxManager arm64 self-tests succeeded.")
             Foundation.exit(0)
         } catch {
@@ -199,5 +201,213 @@ public enum SelfTestSuite {
             throw capturedError
         }
         print("  [OK] Native MCP JSON-RPC 2.0 protocol engine (18 tools, 4 resources)")
+    }
+
+    private static func verifyTypographyContrastWCAG() throws {
+        // Test against worst-case MeshGradient edge luminance as well as base backdrop
+        let lightCard = LiquidPalette.cardScrimLight.composited(over: LiquidPalette.backdropLightEdge)
+        let darkCard = LiquidPalette.cardScrimDark.composited(over: LiquidPalette.backdropDarkEdge)
+        let lightCardHC = LiquidPalette.cardScrimLightHC.composited(over: LiquidPalette.backdropLightEdge)
+        let darkCardHC = LiquidPalette.cardScrimDarkHC.composited(over: LiquidPalette.backdropDarkEdge)
+        let lightWell = LiquidPalette.wellFillLight.composited(over: lightCard)
+        let darkWell = LiquidPalette.wellFillDark.composited(over: darkCard)
+        let lightCode = LiquidPalette.codeCanvasLight.composited(over: lightCard)
+        let darkCode = LiquidPalette.codeCanvasDark.composited(over: darkCard)
+
+        // Primary text >= 10:1 (exceeds WCAG AAA 7:1) across all surfaces in both themes
+        for (name, fg, bg) in [
+            ("light primary/card", LiquidPalette.textPrimaryLight, lightCard),
+            ("light primary/well", LiquidPalette.textPrimaryLight, lightWell),
+            ("light primary/code", LiquidPalette.textPrimaryLight, lightCode),
+            ("dark primary/card", LiquidPalette.textPrimaryDark, darkCard),
+            ("dark primary/well", LiquidPalette.textPrimaryDark, darkWell),
+            ("dark primary/code", LiquidPalette.textPrimaryDark, darkCode)
+        ] {
+            let ratio = fg.contrastRatio(against: bg)
+            try expect(ratio >= 10.0, "Contrast failed for \(name): \(String(format: "%.2f", ratio)):1 < 10.0:1")
+        }
+
+        // Secondary text >= 7.0:1 (WCAG AAA)
+        for (name, fg, bg) in [
+            ("light secondary/card", LiquidPalette.textSecondaryLight, lightCard),
+            ("light secondary/well", LiquidPalette.textSecondaryLight, lightWell),
+            ("dark secondary/card", LiquidPalette.textSecondaryDark, darkCard),
+            ("dark secondary/well", LiquidPalette.textSecondaryDark, darkWell)
+        ] {
+            let ratio = fg.contrastRatio(against: bg)
+            try expect(ratio >= 7.0, "Contrast failed for \(name): \(String(format: "%.2f", ratio)):1 < 7.0:1")
+        }
+
+        // Muted metadata text >= 5.0:1 (exceeds WCAG AA 4.5:1), and >= 7.0:1 in Increased Contrast mode
+        for (name, fg, bg) in [
+            ("light muted/card", LiquidPalette.textMutedLight, lightCard),
+            ("light muted/well", LiquidPalette.textMutedLight, lightWell),
+            ("dark muted/card", LiquidPalette.textMutedDark, darkCard),
+            ("dark muted/well", LiquidPalette.textMutedDark, darkWell)
+        ] {
+            let ratio = fg.contrastRatio(against: bg)
+            try expect(ratio >= 5.0, "Contrast failed for \(name): \(String(format: "%.2f", ratio)):1 < 5.0:1")
+        }
+        for (name, fg, bg) in [
+            ("light HC muted/card", LiquidPalette.textSecondaryLight, lightCardHC),
+            ("dark HC muted/card", LiquidPalette.textSecondaryDark, darkCardHC)
+        ] {
+            let ratio = fg.contrastRatio(against: bg)
+            try expect(ratio >= 7.0, "High-contrast failed for \(name): \(String(format: "%.2f", ratio)):1 < 7.0:1")
+        }
+
+        // Segmented picker & electric emerald solid controls: obsidian ink on electric emerald >= 9.0:1
+        let emeraldOnContrast = LiquidPalette.onBrandEmerald.contrastRatio(against: LiquidPalette.brandEmeraldSolid)
+        try expect(emeraldOnContrast >= 9.0, "On-emerald contrast failed: \(String(format: "%.2f", emeraldOnContrast)):1 < 9.0:1")
+
+        let lightSegActive = LiquidPalette.segmentActiveLight.composited(over: lightWell)
+        let darkSegActive = LiquidPalette.segmentActiveDark.composited(over: darkWell)
+        for (name, fg, bg) in [
+            ("light segment active", LiquidPalette.onBrandEmerald, lightSegActive),
+            ("dark segment active", LiquidPalette.onBrandEmerald, darkSegActive)
+        ] {
+            let ratio = fg.contrastRatio(against: bg)
+            try expect(ratio >= 9.0, "Segmented picker contrast failed for \(name): \(String(format: "%.2f", ratio)):1 < 9.0:1")
+        }
+
+        // Active selected macOS List row text over accent blue highlight >= 4.5:1
+        for (name, fg) in [
+            ("selected row primary", LiquidPalette.selectedRowPrimary),
+            ("selected row secondary", LiquidPalette.selectedRowSecondary),
+            ("selected row muted", LiquidPalette.selectedRowMuted)
+        ] {
+            let ratio = fg.contrastRatio(against: LiquidPalette.selectionAccentRef)
+            try expect(ratio >= 4.5, "Selected list row contrast failed for \(name): \(String(format: "%.2f", ratio)):1 < 4.5:1")
+        }
+
+        // Prominent filled buttons: white text >= 4.5:1 across all semantic prominent tints
+        let white = LiquidRGB(1.0, 1.0, 1.0, 1.0)
+        for (name, bg) in [
+            ("prominent green", LiquidPalette.prominentGreen),
+            ("prominent blue", LiquidPalette.prominentBlue),
+            ("prominent indigo", LiquidPalette.prominentIndigo),
+            ("prominent orange", LiquidPalette.prominentOrange)
+        ] {
+            let ratio = white.contrastRatio(against: bg)
+            try expect(ratio >= 4.5, "Prominent button contrast failed for \(name): \(String(format: "%.2f", ratio)):1 < 4.5:1")
+        }
+
+        // Semantic status colors >= 4.5:1 (WCAG AA) on card, tinted pill, and tinted well in Light & Dark modes
+        let lightStatuses: [(String, LiquidRGB)] = [
+            ("green", LiquidPalette.statusGreenLight),
+            ("blue", LiquidPalette.statusBlueLight),
+            ("orange", LiquidPalette.statusOrangeLight),
+            ("red", LiquidPalette.statusRedLight),
+            ("purple", LiquidPalette.statusPurpleLight),
+            ("indigo", LiquidPalette.statusIndigoLight),
+            ("teal", LiquidPalette.statusTealLight),
+            ("pink", LiquidPalette.statusPinkLight),
+            ("neutral", LiquidPalette.statusNeutralLight)
+        ]
+        let lightPillBase = LiquidPalette.pillBaseLight.composited(over: lightCard)
+        for (label, fg) in lightStatuses {
+            let cardRatio = fg.contrastRatio(against: lightCard)
+            let tintedPill = fg.withAlpha(0.10).composited(over: lightPillBase)
+            let pillRatio = fg.contrastRatio(against: tintedPill)
+            let tintedWell = fg.withAlpha(0.09).composited(over: lightWell)
+            let wellMutedRatio = LiquidPalette.textMutedLight.contrastRatio(against: tintedWell)
+            try expect(cardRatio >= 4.5, "Light status \(label)/card contrast \(String(format: "%.2f", cardRatio)):1 < 4.5:1")
+            try expect(pillRatio >= 4.5, "Light status \(label)/pill contrast \(String(format: "%.2f", pillRatio)):1 < 4.5:1")
+            try expect(wellMutedRatio >= 4.5, "Light muted text on \(label) well contrast \(String(format: "%.2f", wellMutedRatio)):1 < 4.5:1")
+        }
+
+        let darkStatuses: [(String, LiquidRGB)] = [
+            ("green", LiquidPalette.statusGreenDark),
+            ("blue", LiquidPalette.statusBlueDark),
+            ("orange", LiquidPalette.statusOrangeDark),
+            ("red", LiquidPalette.statusRedDark),
+            ("purple", LiquidPalette.statusPurpleDark),
+            ("indigo", LiquidPalette.statusIndigoDark),
+            ("teal", LiquidPalette.statusTealDark),
+            ("pink", LiquidPalette.statusPinkDark),
+            ("neutral", LiquidPalette.statusNeutralDark)
+        ]
+        let darkPillBase = LiquidPalette.pillBaseDark.composited(over: darkCard)
+        for (label, fg) in darkStatuses {
+            let cardRatio = fg.contrastRatio(against: darkCard)
+            let tintedPill = fg.withAlpha(0.16).composited(over: darkPillBase)
+            let pillRatio = fg.contrastRatio(against: tintedPill)
+            let tintedWell = fg.withAlpha(0.14).composited(over: darkWell)
+            let wellMutedRatio = LiquidPalette.textMutedDark.contrastRatio(against: tintedWell)
+            try expect(cardRatio >= 4.5, "Dark status \(label)/card contrast \(String(format: "%.2f", cardRatio)):1 < 4.5:1")
+            try expect(pillRatio >= 4.5, "Dark status \(label)/pill contrast \(String(format: "%.2f", pillRatio)):1 < 4.5:1")
+            try expect(wellMutedRatio >= 4.5, "Dark muted text on \(label) well contrast \(String(format: "%.2f", wellMutedRatio)):1 < 4.5:1")
+        }
+
+        print("  [OK] WCAG 2.1 typography, HC, selected-row, button & pill contrast audit (Light + Dark)")
+    }
+
+    private static func verifyBillingQuotaMetrics() throws {
+        // 1. Nil / zero free tier
+        let empty = BillingQuotaMetrics.compute(usageCost: nil, orgLimits: nil)
+        try expect(empty.primaryValueText == "$0.00" && empty.suffixValueText == nil, "Expected $0.00 for nil usage")
+        try expect(empty.badgeText == "免费", "Expected 免费 badge, got \(empty.badgeText)")
+        try expect(empty.progress == 0.0 && !empty.hasBudgetCap && !empty.isOverBudget, "Expected zero progress & no cap")
+
+        // 2. Uncapped pay-as-you-go must NOT trigger a false 100% red progress bar
+        let paygUsage = try JSONDecoder().decode(OrgUsage.self, from: #"{"costUSD": 0.45, "overageUSD": 0.0}"#.data(using: .utf8)!)
+        let payg = BillingQuotaMetrics.compute(usageCost: paygUsage, orgLimits: nil)
+        try expect(payg.primaryValueText == "$0.45" && payg.suffixValueText == nil, "Unexpected PAYG valueText: \(payg.valueText)")
+        try expect(payg.badgeText == "按量", "Unexpected PAYG badge: \(payg.badgeText)")
+        try expect(payg.progress == 0.0 && !payg.isOverBudget && !payg.hasBudgetCap, "PAYG without cap must keep calm progress 0")
+
+        // 3. Credits partially spent (creditRemainingUSD + creditsUsedUSD) must reconstruct full period pool
+        let spentCreditJSON = #"{"costUSD": 6.00, "creditRemainingUSD": 4.00, "creditsUsedUSD": 6.00, "overageUSD": 0.0}"#.data(using: .utf8)!
+        let spentCredit = BillingQuotaMetrics.compute(
+            usageCost: try JSONDecoder().decode(OrgUsage.self, from: spentCreditJSON),
+            orgLimits: nil
+        )
+        try expect(spentCredit.valueText == "$6.00 / $10.00", "Expected $6.00 / $10.00, got \(spentCredit.valueText)")
+        try expect(spentCredit.badgeText == "60%", "Expected 60% badge, got \(spentCredit.badgeText)")
+        try expect(abs(spentCredit.progress - 0.60) < 0.001 && !spentCredit.isOverBudget, "Spent credits must not false-alarm over budget")
+
+        // 4. Plan allowanceUSD + orgLimits.monthlyCreditUSD must NOT double-count
+        let proLimits = try JSONDecoder().decode(OrgLimits.self, from: #"{"monthlyCreditUSD": 10.0}"#.data(using: .utf8)!)
+        let proUsage = try JSONDecoder().decode(
+            OrgUsage.self,
+            from: #"{"costUSD": 6.00, "allowanceUSD": 10.00, "creditRemainingUSD": 4.00, "creditsUsedUSD": 6.00, "overageUSD": 0.0}"#.data(using: .utf8)!
+        )
+        let pro = BillingQuotaMetrics.compute(usageCost: proUsage, orgLimits: proLimits)
+        try expect(pro.valueText == "$6.00 / $10.00", "allowanceUSD + monthlyCreditUSD must not double-count; got \(pro.valueText)")
+        try expect(pro.badgeText == "60%", "Unexpected pro badge: \(pro.badgeText)")
+
+        // 5. Additive allowance + separate wallet credits
+        let pooledJSON = #"{"costUSD": 2.50, "allowanceUSD": 5.00, "creditsUSD": 5.00, "overageUSD": 0.0}"#.data(using: .utf8)!
+        let pooled = BillingQuotaMetrics.compute(
+            usageCost: try JSONDecoder().decode(OrgUsage.self, from: pooledJSON),
+            orgLimits: nil
+        )
+        try expect(pooled.valueText == "$2.50 / $10.00", "Unexpected pooled valueText: \(pooled.valueText)")
+        try expect(pooled.badgeText == "25%", "Unexpected pooled badgeText: \(pooled.badgeText)")
+
+        // 6. Spend cap override
+        let capLimits = try JSONDecoder().decode(OrgLimits.self, from: #"{"spendCapUSD": 50.0, "monthlyCreditUSD": 10.0}"#.data(using: .utf8)!)
+        let capUsage = try JSONDecoder().decode(OrgUsage.self, from: #"{"costUSD": 25.0, "creditsUSD": 10.0}"#.data(using: .utf8)!)
+        let capped = BillingQuotaMetrics.compute(usageCost: capUsage, orgLimits: capLimits)
+        try expect(capped.valueText == "$25.00 / $50.00", "Unexpected capped valueText: \(capped.valueText)")
+        try expect(capped.badgeText == "50%", "Unexpected capped badgeText: \(capped.badgeText)")
+
+        // 7. Overage alert state (concise badge that never truncates card title)
+        let overUsage = try JSONDecoder().decode(
+            OrgUsage.self,
+            from: #"{"costUSD": 12.0, "allowanceUSD": 5.0, "creditsUSD": 0.0, "overageUSD": 7.0}"#.data(using: .utf8)!
+        )
+        let over = BillingQuotaMetrics.compute(usageCost: overUsage, orgLimits: nil)
+        try expect(over.isOverBudget, "Expected overage flag")
+        try expect(over.badgeText == "超额", "Unexpected overage badgeText: \(over.badgeText)")
+        try expect(over.subtitleText.contains("$7.00"), "Expected exact overage in subtitle: \(over.subtitleText)")
+        try expect(over.progress == 1.0, "Expected clamped progress 1.0 for overage")
+
+        // 8. Negative defensive clamping
+        let negUsage = try JSONDecoder().decode(OrgUsage.self, from: #"{"costUSD": -3.0, "creditsUSD": -1.0}"#.data(using: .utf8)!)
+        let clamped = BillingQuotaMetrics.compute(usageCost: negUsage, orgLimits: nil)
+        try expect(clamped.costUSD == 0 && clamped.creditsUSD == 0 && clamped.progress == 0, "Expected negative values clamped to 0")
+
+        print("  [OK] BillingQuotaMetrics edge-case, credit-pool & unification logic")
     }
 }

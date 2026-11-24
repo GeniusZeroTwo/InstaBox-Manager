@@ -10,7 +10,7 @@ struct PortsOverviewView: View {
                 HStack(spacing: 14) {
                     GlassIconOrb(
                         systemImage: "network",
-                        tint: .teal,
+                        tint: LiquidPalette.statusTeal,
                         size: 40,
                         iconSize: 18,
                         cornerRadius: 13
@@ -18,10 +18,11 @@ struct PortsOverviewView: View {
 
                     VStack(alignment: .leading, spacing: 4) {
                         Text("已发布端口")
-                            .font(.title3.weight(.semibold))
+                            .font(.title3.weight(.bold))
+                            .foregroundStyle(LiquidPalette.textPrimary)
                         Text("查看并管理当前工作区所有沙盒暴露的公开与私密 HTTPS 域名。")
                             .font(.subheadline)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(LiquidPalette.textSecondary)
                     }
                     Spacer()
                     Button {
@@ -32,7 +33,7 @@ struct PortsOverviewView: View {
                     .buttonStyle(.glass)
                 }
                 .padding(18)
-                .glassCard(cornerRadius: 20, tint: .teal.opacity(0.05))
+                .glassCard(cornerRadius: 20, tint: LiquidPalette.statusTeal.opacity(0.05))
             }
             .padding([.horizontal, .top], 14)
 
@@ -51,28 +52,30 @@ struct PortsOverviewView: View {
                         LazyVStack(spacing: 10) {
                             ForEach(store.allPorts) { item in
                                 let machineName = store.machines.first(where: { $0.id == item.machineId })?.name ?? item.machineId
+                                let accessColor = item.access == "private" ? LiquidPalette.statusOrange : LiquidPalette.statusGreen
                                 HStack(spacing: 14) {
                                     Text(":\(item.port)")
                                         .font(.system(.body, design: .monospaced).bold())
                                         .padding(.horizontal, 12)
                                         .padding(.vertical, 6)
-                                        .foregroundStyle(Color.accentColor)
-                                        .glassPill(tint: .accentColor.opacity(0.18))
+                                        .foregroundStyle(LiquidPalette.statusBlue)
+                                        .glassPill(tint: LiquidPalette.statusBlue)
 
                                     VStack(alignment: .leading, spacing: 4) {
                                         HStack(spacing: 8) {
                                             Text(machineName)
                                                 .font(.subheadline.bold())
+                                                .foregroundStyle(LiquidPalette.textPrimary)
                                             Text(item.access == "private" ? "私密令牌" : "公开访问")
                                                 .font(.caption2.weight(.semibold))
                                                 .padding(.horizontal, 7)
                                                 .padding(.vertical, 2)
-                                                .foregroundStyle(item.access == "private" ? .orange : .green)
-                                                .glassPill(tint: (item.access == "private" ? Color.orange : Color.green).opacity(0.18))
+                                                .foregroundStyle(accessColor)
+                                                .glassPill(tint: accessColor)
                                         }
                                         Text(item.tokenUrl ?? item.url)
                                             .font(.caption.monospaced())
-                                            .foregroundStyle(.secondary)
+                                            .foregroundStyle(LiquidPalette.textSecondary)
                                             .textSelection(.enabled)
                                     }
 
@@ -112,7 +115,7 @@ struct PortsOverviewView: View {
                                 }
                                 .padding(16)
                                 .glassCard(cornerRadius: 18, interactive: true)
-                                .liquidHoverLift(scale: 1.008, liftY: -1.5, glowColor: .teal)
+                                .liquidHoverLift(liftY: -1.5, glowColor: LiquidPalette.statusTeal)
                             }
                         }
                         .padding(.horizontal, 14)

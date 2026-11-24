@@ -30,6 +30,8 @@ struct InstaBoxManagerApp: App {
         WindowGroup("InstaBox 管理面板", id: "main") {
             RootView()
                 .environment(store)
+                .tint(LiquidPalette.statusGreen)
+                .preferredColorScheme(store.appearanceMode.colorScheme)
                 .frame(minWidth: 1080, minHeight: 700)
         }
         .defaultSize(width: 1260, height: 800)
@@ -54,6 +56,8 @@ struct InstaBoxManagerApp: App {
         MenuBarExtra {
             MenuBarContentView()
                 .environment(store)
+                .tint(LiquidPalette.statusGreen)
+                .preferredColorScheme(store.appearanceMode.colorScheme)
         } label: {
             HStack(spacing: 4) {
                 Image(systemName: "cube.transparent.fill")
@@ -67,7 +71,9 @@ struct InstaBoxManagerApp: App {
         Settings {
             SettingsView()
                 .environment(store)
-                .frame(width: 560, height: 460)
+                .tint(LiquidPalette.statusGreen)
+                .preferredColorScheme(store.appearanceMode.colorScheme)
+                .frame(width: 560, height: 480)
         }
     }
 }

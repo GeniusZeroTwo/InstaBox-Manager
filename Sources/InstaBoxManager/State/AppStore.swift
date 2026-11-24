@@ -2,7 +2,31 @@ import Foundation
 import Observation
 import SwiftUI
 
-public enum SidebarSection: Hashable, Identifiable {
+public enum AppAppearanceMode: String, CaseIterable, Identifiable, Sendable {
+    case dark = "dark"
+    case light = "light"
+    case system = "system"
+
+    public var id: String { rawValue }
+
+    public var displayName: String {
+        switch self {
+        case .dark: return "暗黑翠绿（推荐）"
+        case .light: return "明亮模式"
+        case .system: return "跟随系统"
+        }
+    }
+
+    public var colorScheme: ColorScheme? {
+        switch self {
+        case .dark: return .dark
+        case .light: return .light
+        case .system: return nil
+        }
+    }
+}
+
+public enum SidebarSection: Hashable, Identifiable, CaseIterable {
     case overview
     case machines
     case snapshots
@@ -22,6 +46,18 @@ public enum SidebarSection: Hashable, Identifiable {
         case .secretsAndWebhooks: return "密钥与 Webhook"
         case .mcpServer: return "MCP 服务"
         case .addAccount: return "切换 / 添加 API"
+        }
+    }
+
+    public var codeTag: String {
+        switch self {
+        case .overview: return "HOME"
+        case .machines: return "BOXES"
+        case .snapshots: return "SNAPS"
+        case .ports: return "PORTS"
+        case .secretsAndWebhooks: return "KEYS"
+        case .mcpServer: return "MCP"
+        case .addAccount: return "AUTH"
         }
     }
 
@@ -95,6 +131,16 @@ public final class AppStore {
         }
     }
 
+    public var appearanceMode: AppAppearanceMode = .dark {
+        didSet {
+            UserDefaults.standard.set(appearanceMode.rawValue, forKey: "instabox.appearanceMode")
+        }
+    }
+
+    public func toggleQuickAppearance() {
+        appearanceMode = (appearanceMode == .light) ? .dark : .light
+    }
+
     // MCP Server State
     public var mcpServerRunning = false
     public var mcpServerError: String?
@@ -127,6 +173,10 @@ public final class AppStore {
         if let termRaw = UserDefaults.standard.string(forKey: "instabox.preferredTerminal"),
            let pref = TerminalAppPreference(rawValue: termRaw) {
             self.preferredTerminal = pref
+        }
+        if let appRaw = UserDefaults.standard.string(forKey: "instabox.appearanceMode"),
+           let mode = AppAppearanceMode(rawValue: appRaw) {
+            self.appearanceMode = mode
         }
         let savedPort = UserDefaults.standard.integer(forKey: "instabox.mcp.port")
         if (1024...65535).contains(savedPort) {

@@ -37,12 +37,15 @@ struct RemoteDesktopTab: View {
                     HStack(spacing: 10) {
                         HStack(spacing: 7) {
                             LivePulseDot(
-                                color: status?.running == true ? .green : (status?.installing == true ? .orange : .secondary),
+                                color: status?.running == true
+                                    ? LiquidPalette.statusGreen
+                                    : (status?.installing == true ? LiquidPalette.statusOrange : LiquidPalette.statusNeutral),
                                 isPulsing: status?.running == true,
                                 size: 8
                             )
                             Text(statusText)
-                                .font(.subheadline.weight(.medium))
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundStyle(LiquidPalette.textPrimary)
                                 .contentTransition(.interpolate)
                                 .lineLimit(1)
                         }
@@ -109,20 +112,21 @@ struct RemoteDesktopTab: View {
                         HStack(spacing: 10) {
                             HStack(spacing: 6) {
                                 Image(systemName: "arrow.left.arrow.right.circle.fill")
-                                    .foregroundStyle(autoSyncClipboard ? Color.accentColor : .secondary)
+                                    .foregroundStyle(autoSyncClipboard ? LiquidPalette.statusBlue : LiquidPalette.textMuted)
                                 Toggle("双向剪贴板自动同步 (Mac ⇄ 云端)", isOn: $autoSyncClipboard)
-                                    .font(.caption.weight(.medium))
+                                    .font(.caption.weight(.semibold))
+                                    .foregroundStyle(LiquidPalette.textPrimary)
                                     .toggleStyle(.switch)
                                     .controlSize(.mini)
                             }
 
                             if let dir = lastSyncDirectionLabel {
                                 Text(dir)
-                                    .font(.caption2.weight(.medium))
-                                    .foregroundStyle(.secondary)
+                                    .font(.caption2.weight(.semibold))
+                                    .foregroundStyle(LiquidPalette.statusBlue)
                                     .padding(.horizontal, 8)
                                     .padding(.vertical, 2.5)
-                                    .glassPill(tint: .accentColor.opacity(0.14))
+                                    .glassPill(tint: LiquidPalette.statusBlue)
                                     .transition(.opacity.combined(with: .scale(scale: 0.9)))
                             }
 
@@ -143,7 +147,7 @@ struct RemoteDesktopTab: View {
                                     }
                                 }
                                 .buttonStyle(.glassProminent)
-                                .tint(.orange)
+                                .tint(LiquidPalette.prominentOrange.color)
                                 .controlSize(.small)
                                 .disabled(isInstallingClipboardTools)
                                 .help("自动在沙盒内安装 xclip / wl-clipboard 以开启完整双向剪贴板同步")
@@ -214,17 +218,18 @@ struct RemoteDesktopTab: View {
                     .glassCard(cornerRadius: 20)
                 } else {
                     VStack(spacing: 14) {
-                        GlassIconOrb(systemImage: "display", tint: .accentColor, size: 64, iconSize: 28, cornerRadius: 20)
+                        GlassIconOrb(systemImage: "display", tint: LiquidPalette.statusBlue, size: 64, iconSize: 28, cornerRadius: 20)
                         Text("远程图形桌面（X11 / Wayland / Android 屏幕）")
                             .font(.headline)
+                            .foregroundStyle(LiquidPalette.textPrimary)
                         if let hint = status?.hint {
                             Text(hint)
                                 .font(.caption)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(LiquidPalette.textSecondary)
                         } else {
                             Text("点击上方「启动并连接桌面」即可在面板内直接操控云端浏览器与桌面，并默认开启 Mac ⇄ 云端双向剪贴板实时同步。")
                                 .font(.caption)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(LiquidPalette.textSecondary)
                                 .multilineTextAlignment(.center)
                                 .frame(maxWidth: 480)
                         }

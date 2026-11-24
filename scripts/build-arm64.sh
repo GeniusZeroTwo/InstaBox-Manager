@@ -75,14 +75,14 @@ for size in sizes {
     let cardRect = rect.insetBy(dx: inset, dy: inset)
     let radius = CGFloat(size) * 0.225
 
-    // 1. Deep sapphire-violet ambient base squircle
+    // 1. Deep obsidian-emerald luminous base squircle
     let path = NSBezierPath(roundedRect: cardRect, xRadius: radius, yRadius: radius)
     let baseGradient = NSGradient(colors: [
-        NSColor(calibratedRed: 0.09, green: 0.28, blue: 0.90, alpha: 1.0),
-        NSColor(calibratedRed: 0.24, green: 0.16, blue: 0.78, alpha: 1.0),
-        NSColor(calibratedRed: 0.06, green: 0.52, blue: 0.78, alpha: 1.0)
+        NSColor(calibratedRed: 0.04, green: 0.14, blue: 0.09, alpha: 1.0),
+        NSColor(calibratedRed: 0.06, green: 0.34, blue: 0.18, alpha: 1.0),
+        NSColor(calibratedRed: 0.13, green: 0.83, blue: 0.40, alpha: 1.0)
     ])!
-    baseGradient.draw(in: path, angle: -52)
+    baseGradient.draw(in: path, angle: -48)
 
     // 2. Top-left caustic Liquid Glass specular sheen
     let sheenGradient = NSGradient(colors: [

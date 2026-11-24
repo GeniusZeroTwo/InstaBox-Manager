@@ -139,7 +139,8 @@ struct MachineDetailView: View {
             VStack(alignment: .leading, spacing: 4) {
                 HStack(spacing: 8) {
                     Text(machine.name)
-                        .font(.title3.weight(.semibold))
+                        .font(.title3.weight(.bold))
+                        .foregroundStyle(LiquidPalette.textPrimary)
                         .lineLimit(1)
                         .help(machine.name)
                     StateBadge(state: machine.state, operation: activeOp)
@@ -148,8 +149,8 @@ struct MachineDetailView: View {
                             .font(.caption2.weight(.semibold))
                             .padding(.horizontal, 7)
                             .padding(.vertical, 2)
-                            .foregroundStyle(.green)
-                            .glassPill(tint: .green.opacity(0.20))
+                            .foregroundStyle(LiquidPalette.statusGreen)
+                            .glassPill(tint: LiquidPalette.statusGreen)
                     }
                 }
                 HStack(spacing: 8) {
@@ -159,19 +160,24 @@ struct MachineDetailView: View {
                     } label: {
                         Label(machine.id, systemImage: "doc.on.doc")
                             .font(.caption.monospaced())
+                            .lineLimit(1)
+                            .truncationMode(.middle)
                     }
                     .buttonStyle(.plain)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(LiquidPalette.textSecondary)
+                    .help("点击复制实例 ID：\(machine.id)")
 
-                    Text("· 模板 \(machine.template.id)")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                    Text("· \(machine.template.id)")
+                        .font(.caption.weight(.medium))
+                        .foregroundStyle(LiquidPalette.textSecondary)
                         .lineLimit(1)
+                        .fixedSize(horizontal: true, vertical: false)
 
                     Text("· \(machine.spec.displayLabel)")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .font(.caption.weight(.medium))
+                        .foregroundStyle(LiquidPalette.textSecondary)
                         .lineLimit(1)
+                        .fixedSize(horizontal: true, vertical: false)
                 }
             }
             .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
@@ -184,8 +190,7 @@ struct MachineDetailView: View {
                     } label: {
                         Label("启动", systemImage: "play.fill")
                     }
-                    .buttonStyle(.glassProminent)
-                    .tint(.green)
+                    .buttonStyle(.emeraldPrimary)
                     .disabled(activeOp != nil)
                 }
 
@@ -196,7 +201,7 @@ struct MachineDetailView: View {
                         Label("恢复", systemImage: "play.circle.fill")
                     }
                     .buttonStyle(.glassProminent)
-                    .tint(.indigo)
+                    .tint(LiquidPalette.prominentIndigo.color)
                     .disabled(activeOp != nil)
                 }
 
@@ -205,13 +210,15 @@ struct MachineDetailView: View {
                         Task { await store.openQuickSSH(for: machine) }
                     } label: {
                         Label("SSH 终端", systemImage: "terminal")
+                            .lineLimit(1)
                     }
-                    .buttonStyle(.glassProminent)
+                    .buttonStyle(.emeraldPrimary)
 
                     Button {
                         Task { await store.suspendMachine(machine) }
                     } label: {
                         Label("暂停", systemImage: "pause.fill")
+                            .lineLimit(1)
                     }
                     .buttonStyle(.glass)
                     .disabled(activeOp != nil)
@@ -220,6 +227,7 @@ struct MachineDetailView: View {
                         Task { await store.stopMachine(machine) }
                     } label: {
                         Label("关机", systemImage: "stop.fill")
+                            .lineLimit(1)
                     }
                     .buttonStyle(.glass)
                     .disabled(activeOp != nil)
@@ -261,6 +269,8 @@ struct MachineDetailView: View {
                 .help("更多沙盒操作")
                 .accessibilityLabel("更多沙盒操作")
             }
+            .fixedSize(horizontal: true, vertical: false)
+            .layoutPriority(1)
         }
         .padding(.horizontal, 18)
         .padding(.vertical, 13)
@@ -286,7 +296,7 @@ struct MachineDetailView: View {
                         alertCard(
                             title: "最近一次错误 (\(err.code))",
                             body: err.message,
-                            color: .red,
+                            color: LiquidPalette.statusRed,
                             icon: "exclamationmark.octagon.fill"
                         )
                     }
@@ -295,7 +305,7 @@ struct MachineDetailView: View {
                         alertCard(
                             title: "安全风控暂停提示",
                             body: "\(lock.explanation)\n详情：\(lock.what)\n申诉方式：\(lock.appeal)",
-                            color: .orange,
+                            color: LiquidPalette.statusOrange,
                             icon: "shield.lefthalf.filled.trianglebadge.exclamationmark"
                         )
                     }
@@ -304,7 +314,7 @@ struct MachineDetailView: View {
                         alertCard(
                             title: "检测到内核 OOM Kill（累计 \(machine.oomKills ?? 1) 次）",
                             body: "进程 \(oom.process) (PID \(oom.pid)) 占用内存 \(Formatters.bytes(oom.rssBytes)) 时被终止，时间：\(Formatters.relativeOrShortTime(oom.at))",
-                            color: .orange,
+                            color: LiquidPalette.statusOrange,
                             icon: "memorychip"
                         )
                     }
@@ -312,9 +322,10 @@ struct MachineDetailView: View {
                     // System & Spec Details
                     VStack(alignment: .leading, spacing: 14) {
                         HStack(spacing: 8) {
-                            GlassIconOrb(systemImage: "cpu", tint: .blue, size: 28, iconSize: 13, cornerRadius: 8)
+                            GlassIconOrb(systemImage: "cpu", tint: LiquidPalette.statusBlue, size: 28, iconSize: 13, cornerRadius: 8)
                             Text("实例属性")
                                 .font(.headline)
+                                .foregroundStyle(LiquidPalette.textPrimary)
                         }
 
                         LazyVGrid(columns: [GridItem(.adaptive(minimum: 200), spacing: 12)], spacing: 10) {
@@ -336,14 +347,16 @@ struct MachineDetailView: View {
                     // Edit / Resize Card
                     VStack(alignment: .leading, spacing: 14) {
                         HStack(spacing: 8) {
-                            GlassIconOrb(systemImage: "slider.horizontal.3", tint: .indigo, size: 28, iconSize: 13, cornerRadius: 8)
+                            GlassIconOrb(systemImage: "slider.horizontal.3", tint: LiquidPalette.statusIndigo, size: 28, iconSize: 13, cornerRadius: 8)
                             Text("修改名称、规格扩容与自动暂停")
                                 .font(.headline)
+                                .foregroundStyle(LiquidPalette.textPrimary)
                         }
 
                         HStack(spacing: 12) {
                             TextField("沙盒名称", text: $editedName)
                                 .textFieldStyle(.plain)
+                                .foregroundStyle(LiquidPalette.textPrimary)
                                 .padding(.horizontal, 10)
                                 .padding(.vertical, 7)
                                 .glassWell(cornerRadius: 9)
@@ -367,10 +380,8 @@ struct MachineDetailView: View {
                             .disabled(specs.count <= 1)
 
                             Stepper("数据盘 (/data)：\(editedDiskGiB) GiB", value: $editedDiskGiB, in: 1...1024, step: 5)
+                                .foregroundStyle(LiquidPalette.textPrimary)
                                 .frame(maxWidth: 240)
-
-                            Toggle("运行中自动重启生效", isOn: $applyWithRestart)
-                                .font(.caption)
                         }
 
                         HStack(spacing: 16) {
@@ -383,6 +394,12 @@ struct MachineDetailView: View {
                                 Text("关闭 (Always On)").tag(0)
                             }
                             .frame(maxWidth: 240)
+
+                            Toggle("运行中自动重启生效", isOn: $applyWithRestart)
+                                .font(.caption.weight(.medium))
+                                .foregroundStyle(LiquidPalette.textSecondary)
+
+                            Spacer(minLength: 8)
 
                             Button("应用规格与策略变更") {
                                 let chosen = specs.indices.contains(selectedSpecIdx) ? specs[selectedSpecIdx] : nil
@@ -409,8 +426,8 @@ struct MachineDetailView: View {
                         }
 
                         Text("说明：免费套餐固定为 4 vCPU / 8 GiB / 20 GiB 磁盘及 30 分钟空闲暂停；付费套餐支持在线扩容 /data 磁盘或在停止/重启时调整规格。")
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
+                            .font(.caption)
+                            .foregroundStyle(LiquidPalette.textMuted)
                     }
                     .padding(18)
                     .glassCard(cornerRadius: 18)
@@ -420,13 +437,14 @@ struct MachineDetailView: View {
                     if !readySnaps.isEmpty {
                         VStack(alignment: .leading, spacing: 10) {
                             HStack(spacing: 8) {
-                                GlassIconOrb(systemImage: "clock.arrow.trianglehead.counterclockwise.rotate.90", tint: .purple, size: 28, iconSize: 13, cornerRadius: 8)
+                                GlassIconOrb(systemImage: "clock.arrow.trianglehead.counterclockwise.rotate.90", tint: LiquidPalette.statusPurple, size: 28, iconSize: 13, cornerRadius: 8)
                                 Text("从快照原地还原 (In-Place Restore)")
                                     .font(.headline)
+                                    .foregroundStyle(LiquidPalette.textPrimary)
                             }
                             Text("保留当前沙盒 ID、名称与公网端口 URL，将磁盘内容回滚到所选快照。")
                                 .font(.caption)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(LiquidPalette.textSecondary)
 
                             HStack(spacing: 12) {
                                 Picker("目标快照", selection: $selectedRestoreSnapshotId) {
@@ -451,16 +469,21 @@ struct MachineDetailView: View {
                     if (machine.metadata?.isEmpty == false) || (machine.envNames?.isEmpty == false) {
                         VStack(alignment: .leading, spacing: 10) {
                             HStack(spacing: 8) {
-                                GlassIconOrb(systemImage: "tag", tint: .teal, size: 28, iconSize: 13, cornerRadius: 8)
+                                GlassIconOrb(systemImage: "tag", tint: LiquidPalette.statusTeal, size: 28, iconSize: 13, cornerRadius: 8)
                                 Text("标签 (Metadata) 与注入变量名")
                                     .font(.headline)
+                                    .foregroundStyle(LiquidPalette.textPrimary)
                             }
                             if let meta = machine.metadata, !meta.isEmpty {
                                 ForEach(meta.keys.sorted(), id: \.self) { k in
                                     HStack {
-                                        Text(k).font(.caption.monospaced().bold())
-                                        Text("=").foregroundStyle(.secondary)
-                                        Text(meta[k] ?? "").font(.caption.monospaced())
+                                        Text(k)
+                                            .font(.caption.monospaced().bold())
+                                            .foregroundStyle(LiquidPalette.textPrimary)
+                                        Text("=").foregroundStyle(LiquidPalette.textMuted)
+                                        Text(meta[k] ?? "")
+                                            .font(.caption.monospaced())
+                                            .foregroundStyle(LiquidPalette.textPrimary)
                                         Spacer()
                                     }
                                     .padding(.horizontal, 10)
@@ -471,7 +494,7 @@ struct MachineDetailView: View {
                             if let envs = machine.envNames, !envs.isEmpty {
                                 Text("已配置环境变量名：\(envs.joined(separator: ", "))")
                                     .font(.caption.monospaced())
-                                    .foregroundStyle(.secondary)
+                                    .foregroundStyle(LiquidPalette.textSecondary)
                             }
                         }
                         .padding(18)
@@ -496,15 +519,16 @@ struct MachineDetailView: View {
     private func kvCell(_ k: String, _ v: String) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(k)
-                .font(.caption)
-                .foregroundStyle(.secondary)
+                .font(.caption.weight(.medium))
+                .foregroundStyle(LiquidPalette.textMuted)
             Text(v)
-                .font(.subheadline.weight(.medium))
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(LiquidPalette.textPrimary)
                 .textSelection(.enabled)
                 .lineLimit(2)
         }
         .padding(11)
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .liquidWellInteractive(cornerRadius: 11)
     }
 
@@ -517,12 +541,13 @@ struct MachineDetailView: View {
                     .foregroundStyle(color)
                 Text(body)
                     .font(.caption)
+                    .foregroundStyle(LiquidPalette.textPrimary)
                     .textSelection(.enabled)
             }
             Spacer()
         }
         .padding(14)
-        .glassCard(cornerRadius: 16, tint: color.opacity(0.16))
+        .glassCard(cornerRadius: 16, tint: color.opacity(0.10))
     }
 
     private func patchMachine(_ req: UpdateMachineRequest) {
@@ -566,19 +591,22 @@ struct MachineDetailView: View {
         GlassEffectContainer {
             VStack(alignment: .leading, spacing: 16) {
                 HStack(spacing: 9) {
-                    GlassIconOrb(systemImage: "camera.aperture", tint: .purple, size: 30, iconSize: 14, cornerRadius: 9)
+                    GlassIconOrb(systemImage: "camera.aperture", tint: LiquidPalette.statusPurple, size: 30, iconSize: 14, cornerRadius: 9)
                     Text("保存沙盒快照")
                         .font(.headline)
+                        .foregroundStyle(LiquidPalette.textPrimary)
                 }
 
                 TextField("快照名称（必填，如 clean-env-v1）", text: $snapshotName)
                     .textFieldStyle(.plain)
+                    .foregroundStyle(LiquidPalette.textPrimary)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 8)
                     .glassWell(cornerRadius: 10)
 
                 TextField("备注描述（可选）", text: $snapshotDesc)
                     .textFieldStyle(.plain)
+                    .foregroundStyle(LiquidPalette.textPrimary)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 8)
                     .glassWell(cornerRadius: 10)

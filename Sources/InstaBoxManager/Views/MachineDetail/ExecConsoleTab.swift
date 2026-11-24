@@ -38,13 +38,14 @@ struct ExecConsoleTab: View {
                 if machine.state != .running {
                     HStack(spacing: 8) {
                         Image(systemName: "exclamationmark.triangle.fill")
-                            .foregroundStyle(.orange)
+                            .foregroundStyle(LiquidPalette.statusOrange)
                         Text("当前沙盒未处于运行状态（\(machine.state.displayName)），请先启动或恢复后再执行实时命令（右侧仍可查看历史命令输出）。")
-                            .font(.caption)
+                            .font(.caption.weight(.medium))
+                            .foregroundStyle(LiquidPalette.textPrimary)
                         Spacer()
                     }
                     .padding(10)
-                    .glassWell(cornerRadius: 10, tint: .orange)
+                    .glassWell(cornerRadius: 10, tint: LiquidPalette.statusOrange)
                 }
 
                 // Quick Preset Liquid Glass Chips
@@ -68,29 +69,32 @@ struct ExecConsoleTab: View {
                 // Working directory & Timeout row
                 HStack(spacing: 10) {
                     Label("目录", systemImage: "folder")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .font(.caption.weight(.medium))
+                        .foregroundStyle(LiquidPalette.textSecondary)
                     TextField("/data/home", text: $workingDirectory)
                         .textFieldStyle(.plain)
                         .font(.caption.monospaced())
+                        .foregroundStyle(LiquidPalette.textPrimary)
                         .padding(.horizontal, 9)
                         .padding(.vertical, 5)
                         .glassWell(cornerRadius: 8)
                         .frame(maxWidth: 220)
 
                     Stepper("超时 \(timeoutSeconds)s", value: $timeoutSeconds, in: 10...600, step: 30)
-                        .font(.caption)
+                        .font(.caption.weight(.medium))
+                        .foregroundStyle(LiquidPalette.textSecondary)
 
                     Spacer()
 
                     if let code = lastExitCode {
+                        let exitColor = code == 0 ? LiquidPalette.statusGreen : LiquidPalette.statusRed
                         Text("Exit: \(code)")
                             .font(.caption.monospaced().bold())
                             .contentTransition(.numericText())
                             .padding(.horizontal, 9)
                             .padding(.vertical, 3)
-                            .foregroundStyle(code == 0 ? .green : .red)
-                            .glassPill(tint: (code == 0 ? Color.green : Color.red).opacity(0.20))
+                            .foregroundStyle(exitColor)
+                            .glassPill(tint: exitColor)
                             .transition(.scale(scale: 0.85).combined(with: .opacity))
                     }
 
@@ -114,12 +118,13 @@ struct ExecConsoleTab: View {
                 HStack(spacing: 8) {
                     Text("$")
                         .font(.system(.body, design: .monospaced).bold())
-                        .foregroundStyle(Color.accentColor)
+                        .foregroundStyle(LiquidPalette.statusBlue)
                         .padding(.leading, 4)
 
                     TextField("输入 bash 命令（回车立即流式执行，如 ls -la 或 python3 -V）…", text: $commandInput)
                         .textFieldStyle(.plain)
                         .font(.system(.body, design: .monospaced))
+                        .foregroundStyle(LiquidPalette.textPrimary)
                         .padding(.horizontal, 10)
                         .padding(.vertical, 7)
                         .glassWell(cornerRadius: 10)
@@ -149,7 +154,7 @@ struct ExecConsoleTab: View {
                         VStack(alignment: .leading, spacing: 0) {
                             Text(outputLog.isEmpty ? "# 输出区域（支持 SSE 实时流式 stdout / stderr）" : outputLog)
                                 .font(.system(size: 12.5, design: .monospaced))
-                                .foregroundStyle(outputLog.isEmpty ? .secondary : Color(nsColor: .textColor))
+                                .foregroundStyle(outputLog.isEmpty ? LiquidPalette.textMuted : LiquidPalette.textPrimary)
                                 .textSelection(.enabled)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .padding(12)
@@ -175,9 +180,10 @@ struct ExecConsoleTab: View {
             VStack(alignment: .leading, spacing: 10) {
                 HStack {
                     HStack(spacing: 7) {
-                        GlassIconOrb(systemImage: "clock.arrow.circlepath", tint: .accentColor, size: 26, iconSize: 12, cornerRadius: 8)
+                        GlassIconOrb(systemImage: "clock.arrow.circlepath", tint: LiquidPalette.statusBlue, size: 26, iconSize: 12, cornerRadius: 8)
                         Text("命令历史记录")
                             .font(.subheadline.bold())
+                            .foregroundStyle(LiquidPalette.textPrimary)
                     }
                     Spacer()
                     Button {
@@ -199,7 +205,7 @@ struct ExecConsoleTab: View {
                 } else if history.isEmpty {
                     Text("暂无历史命令")
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(LiquidPalette.textSecondary)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
                     ScrollView {
@@ -211,19 +217,20 @@ struct ExecConsoleTab: View {
                                     VStack(alignment: .leading, spacing: 4) {
                                         Text(item.command)
                                             .font(.caption.monospaced().weight(.medium))
+                                            .foregroundStyle(LiquidPalette.textPrimary)
                                             .lineLimit(2)
                                             .frame(maxWidth: .infinity, alignment: .leading)
                                         HStack {
                                             Text("Exit \(item.exitCode)")
                                                 .font(.system(size: 10, weight: .semibold, design: .monospaced))
-                                                .foregroundStyle(item.exitCode == 0 ? .green : .red)
+                                                .foregroundStyle(item.exitCode == 0 ? LiquidPalette.statusGreen : LiquidPalette.statusRed)
                                             Text("· \(item.durationMs)ms")
                                                 .font(.caption2)
-                                                .foregroundStyle(.secondary)
+                                                .foregroundStyle(LiquidPalette.textSecondary)
                                             Spacer()
                                             Text(Formatters.relativeOrShortTime(item.startedAt))
                                                 .font(.caption2)
-                                                .foregroundStyle(.tertiary)
+                                                .foregroundStyle(LiquidPalette.textMuted)
                                         }
                                     }
                                     .padding(9)

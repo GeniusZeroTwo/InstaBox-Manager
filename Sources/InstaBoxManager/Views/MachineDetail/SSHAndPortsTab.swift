@@ -41,9 +41,10 @@ struct SSHAndPortsTab: View {
         VStack(alignment: .leading, spacing: 14) {
             HStack {
                 HStack(spacing: 9) {
-                    GlassIconOrb(systemImage: "terminal.fill", tint: .accentColor, size: 30, iconSize: 14, cornerRadius: 9)
+                    GlassIconOrb(systemImage: "terminal.fill", tint: LiquidPalette.statusBlue, size: 30, iconSize: 14, cornerRadius: 9)
                     Text("SSH / Mosh 免密直连")
                         .font(.headline)
+                        .foregroundStyle(LiquidPalette.textPrimary)
                 }
                 Spacer()
                 Button {
@@ -61,12 +62,13 @@ struct SSHAndPortsTab: View {
                     Text("支持特性：\(info.capabilities.joined(separator: ", "))")
                 }
                 .font(.caption.monospaced())
-                .foregroundStyle(.secondary)
+                .foregroundStyle(LiquidPalette.textSecondary)
             }
 
             HStack(spacing: 10) {
                 TextField("令牌备注名", text: $newTokenName)
                     .textFieldStyle(.plain)
+                    .foregroundStyle(LiquidPalette.textPrimary)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 6)
                     .glassWell(cornerRadius: 9)
@@ -101,6 +103,7 @@ struct SSHAndPortsTab: View {
                     HStack {
                         Text("最新签发 SSH 命令（可直接粘贴到任意终端）：")
                             .font(.caption.weight(.semibold))
+                            .foregroundStyle(LiquidPalette.textPrimary)
                         Spacer()
                         Button("复制 SSH") {
                             TerminalLauncher.copyToClipboard(issued.command)
@@ -126,35 +129,36 @@ struct SSHAndPortsTab: View {
                         .textSelection(.enabled)
                 }
                 .padding(12)
-                .glassWell(cornerRadius: 12, tint: .accentColor)
+                .glassWell(cornerRadius: 12, tint: LiquidPalette.statusBlue)
                 .transition(.move(edge: .top).combined(with: .opacity))
             }
 
             if !sshTokens.isEmpty {
                 Text("已签发的 SSH 令牌记录")
                     .font(.caption.weight(.semibold))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(LiquidPalette.textSecondary)
                     .padding(.top, 2)
 
                 ForEach(sshTokens.prefix(10)) { item in
                     HStack {
                         Text(item.name)
-                            .font(.caption.weight(.medium))
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(LiquidPalette.textPrimary)
                         Text(item.id)
                             .font(.caption2.monospaced())
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(LiquidPalette.textMuted)
                         if item.revokedAt != nil {
                             Text("已吊销")
-                                .font(.caption2)
-                                .foregroundStyle(.red)
+                                .font(.caption2.weight(.semibold))
+                                .foregroundStyle(LiquidPalette.statusRed)
                         } else if let exp = item.expiresAt {
                             Text("到期：\(Formatters.relativeOrShortTime(exp))")
                                 .font(.caption2)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(LiquidPalette.textSecondary)
                         } else {
                             Text("长期有效")
-                                .font(.caption2)
-                                .foregroundStyle(.green)
+                                .font(.caption2.weight(.semibold))
+                                .foregroundStyle(LiquidPalette.statusGreen)
                         }
                         Spacer()
                         if let cmd = item.command, item.revokedAt == nil {
@@ -189,9 +193,10 @@ struct SSHAndPortsTab: View {
         VStack(alignment: .leading, spacing: 14) {
             HStack {
                 HStack(spacing: 9) {
-                    GlassIconOrb(systemImage: "globe", tint: .teal, size: 30, iconSize: 14, cornerRadius: 9)
+                    GlassIconOrb(systemImage: "globe", tint: LiquidPalette.statusTeal, size: 30, iconSize: 14, cornerRadius: 9)
                     Text("端口公网 / 私密 HTTPS 暴露")
                         .font(.headline)
+                        .foregroundStyle(LiquidPalette.textPrimary)
                 }
                 Spacer()
                 Button {
@@ -206,6 +211,7 @@ struct SSHAndPortsTab: View {
             HStack(spacing: 10) {
                 TextField("容器端口 (如 3000)", text: $portNumberText)
                     .textFieldStyle(.plain)
+                    .foregroundStyle(LiquidPalette.textPrimary)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 6)
                     .glassWell(cornerRadius: 9)
@@ -213,6 +219,7 @@ struct SSHAndPortsTab: View {
 
                 TextField("名称备注（可选）", text: $portName)
                     .textFieldStyle(.plain)
+                    .foregroundStyle(LiquidPalette.textPrimary)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 6)
                     .glassWell(cornerRadius: 9)
@@ -240,35 +247,37 @@ struct SSHAndPortsTab: View {
             if ports.isEmpty {
                 Text("当前沙盒暂未暴露任何端口。在沙盒内启动 Web 服务（如 3000 / 8080 端口）后在此一键生成 HTTPS 域名。")
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(LiquidPalette.textSecondary)
                     .padding(.vertical, 8)
             } else {
                 ForEach(ports) { p in
+                    let accessColor = p.access == "private" ? LiquidPalette.statusOrange : LiquidPalette.statusGreen
                     HStack(spacing: 12) {
                         Text(":\(p.port)")
                             .font(.system(.subheadline, design: .monospaced).bold())
                             .padding(.horizontal, 9)
                             .padding(.vertical, 4)
-                            .foregroundStyle(Color.accentColor)
-                            .glassPill(tint: .accentColor.opacity(0.16))
+                            .foregroundStyle(LiquidPalette.statusBlue)
+                            .glassPill(tint: LiquidPalette.statusBlue)
 
                         VStack(alignment: .leading, spacing: 2) {
                             HStack(spacing: 6) {
                                 Text(p.tokenUrl ?? p.url)
                                     .font(.caption.monospaced())
+                                    .foregroundStyle(LiquidPalette.textPrimary)
                                     .textSelection(.enabled)
                                     .lineLimit(1)
                                 Text(p.access == "private" ? "私密链接" : "公开")
                                     .font(.caption2.weight(.semibold))
                                     .padding(.horizontal, 6)
                                     .padding(.vertical, 1.5)
-                                    .foregroundStyle(p.access == "private" ? .orange : .green)
-                                    .glassPill(tint: (p.access == "private" ? Color.orange : Color.green).opacity(0.18))
+                                    .foregroundStyle(accessColor)
+                                    .glassPill(tint: accessColor)
                             }
                             if !p.name.isEmpty {
                                 Text(p.name)
                                     .font(.caption2)
-                                    .foregroundStyle(.secondary)
+                                    .foregroundStyle(LiquidPalette.textMuted)
                             }
                         }
 

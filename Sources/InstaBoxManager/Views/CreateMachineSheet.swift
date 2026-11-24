@@ -65,9 +65,10 @@ struct CreateMachineSheet: View {
             VStack(alignment: .leading, spacing: 10) {
                 // Floating Glass Header
                 HStack(spacing: 10) {
-                    GlassIconOrb(systemImage: "plus.square.on.square", tint: .accentColor, size: 34, iconSize: 15, cornerRadius: 11)
+                    GlassIconOrb(systemImage: "plus.square.on.square", tint: LiquidPalette.statusBlue, size: 34, iconSize: 15, cornerRadius: 11)
                     Text("创建新 InstaBox 沙盒")
                         .font(.title3.bold())
+                        .foregroundStyle(LiquidPalette.textPrimary)
                     Spacer()
                     Button {
                         dismiss()
@@ -105,13 +106,13 @@ struct CreateMachineSheet: View {
                             if isFreeTier {
                                 Text("提示：免费套餐支持 agent-browser、android、omarchy、ci 模板或从快照创建。")
                                     .font(.caption)
-                                    .foregroundStyle(.secondary)
+                                    .foregroundStyle(LiquidPalette.textSecondary)
                             }
                         } else {
                             if readySnapshots.isEmpty {
                                 Text("当前工作区暂无可用（ready）快照，请先从沙盒保存快照或改用官方模板。")
-                                    .font(.caption)
-                                    .foregroundStyle(.orange)
+                                    .font(.caption.weight(.medium))
+                                    .foregroundStyle(LiquidPalette.statusOrange)
                             } else {
                                 Picker("选择快照", selection: $selectedSnapshotId) {
                                     ForEach(readySnapshots) { snap in
@@ -152,10 +153,11 @@ struct CreateMachineSheet: View {
                     Section("环境变量与标签（可选，每行 KEY=VALUE）") {
                         VStack(alignment: .leading, spacing: 4) {
                             Text("环境变量 (env)")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
+                                .font(.caption.weight(.medium))
+                                .foregroundStyle(LiquidPalette.textSecondary)
                             TextEditor(text: $envText)
                                 .font(.system(.caption, design: .monospaced))
+                                .foregroundStyle(LiquidPalette.textPrimary)
                                 .scrollContentBackground(.hidden)
                                 .padding(4)
                                 .frame(height: 58)
@@ -164,10 +166,11 @@ struct CreateMachineSheet: View {
 
                         VStack(alignment: .leading, spacing: 4) {
                             Text("元数据标签 (metadata)")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
+                                .font(.caption.weight(.medium))
+                                .foregroundStyle(LiquidPalette.textSecondary)
                             TextEditor(text: $metadataText)
                                 .font(.system(.caption, design: .monospaced))
+                                .foregroundStyle(LiquidPalette.textPrimary)
                                 .scrollContentBackground(.hidden)
                                 .padding(4)
                                 .frame(height: 48)
@@ -178,8 +181,8 @@ struct CreateMachineSheet: View {
                     if let errorMessage {
                         Section {
                             Text(errorMessage)
-                                .font(.caption)
-                                .foregroundStyle(.red)
+                                .font(.caption.weight(.medium))
+                                .foregroundStyle(LiquidPalette.statusRed)
                                 .textSelection(.enabled)
                         }
                     }
