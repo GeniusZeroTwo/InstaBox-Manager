@@ -14,6 +14,7 @@ struct RemoteDesktopTab: View {
     // Bidirectional Clipboard Sync State
     @ViewState private var autoSyncClipboard: Bool = true
     @ViewState private var isSyncingClipboard = false
+    @ViewState private var isInstallingClipboardTools = false
     @ViewState private var lastSyncedText: String = ""
     @ViewState private var lastLocalChangeCount: Int = NSPasteboard.general.changeCount
     @ViewState private var webViewMacClipText: String? = nil
@@ -127,6 +128,27 @@ struct RemoteDesktopTab: View {
 
                             Spacer()
 
+                            if sandboxToolUnsupported {
+                                Button {
+                                    installClipboardToolsManually()
+                                } label: {
+                                    HStack(spacing: 4) {
+                                        if isInstallingClipboardTools {
+                                            ProgressView().controlSize(.mini)
+                                        }
+                                        Label(
+                                            isInstallingClipboardTools ? "正在安装 xclip…" : "一键安装剪贴板工具",
+                                            systemImage: "wrench.and.screwdriver.fill"
+                                        )
+                                    }
+                                }
+                                .buttonStyle(.glassProminent)
+                                .tint(.orange)
+                                .controlSize(.small)
+                                .disabled(isInstallingClipboardTools)
+                                .help("自动在沙盒内安装 xclip / wl-clipboard 以开启完整双向剪贴板同步")
+                            }
+
                             Button {
                                 pushLocalClipboardManually()
                             } label: {
@@ -134,8 +156,8 @@ struct RemoteDesktopTab: View {
                             }
                             .buttonStyle(.glass)
                             .controlSize(.small)
-                            .disabled(isSyncingClipboard)
-                            .help("立即将本机 Mac 剪贴板写入云端沙盒剪贴板")
+                            .disabled(isSyncingClipboard || isInstallingClipboardTools)
+                            .help("立即将本机 Mac 剪贴板写入云端沙盒（若缺少工具将自动安装）")
 
                             Button {
                                 pullRemoteClipboardManually()
@@ -144,8 +166,8 @@ struct RemoteDesktopTab: View {
                             }
                             .buttonStyle(.glass)
                             .controlSize(.small)
-                            .disabled(isSyncingClipboard)
-                            .help("立即读取云端沙盒剪贴板到本机 Mac")
+                            .disabled(isSyncingClipboard || isInstallingClipboardTools)
+                            .help("立即读取云端沙盒剪贴板到本机 Mac（若缺少工具将自动安装）")
                         }
                         .padding(.horizontal, 10)
                         .padding(.vertical, 6)
@@ -319,6 +341,25 @@ struct RemoteDesktopTab: View {
         lastSyncDirectionLabel = "已同步 \(source) → Mac"
     }
 
+    private func installClipboardToolsManually() {
+        guard let client = store.client, !isInstallingClipboardTools else { return }
+        isInstallingClipboardTools = true
+        lastSyncDirectionLabel = "正在安装剪贴板工具…"
+        Task {
+            defer { isInstallingClipboardTools = false }
+            do {
+                _ = try await SandboxClipboardSync.installClipboardTools(client: client, machineId: machine.id)
+                sandboxToolUnsupported = false
+                lastSyncDirectionLabel = "剪贴板工具已就绪"
+                store.showToast(.success, "已在沙盒内自动安装 xclip / wl-clipboard，双向剪贴板已激活！")
+                restartClipboardSyncLoop()
+            } catch {
+                lastSyncDirectionLabel = nil
+                store.showToast(.error, error.localizedDescription)
+            }
+        }
+    }
+
     private func pushLocalClipboardManually() {
         guard let client = store.client else { return }
         guard let text = SandboxClipboardSync.readLocalText(), !text.isEmpty else {
@@ -334,10 +375,18 @@ struct RemoteDesktopTab: View {
         Task {
             defer { isSyncingClipboard = false }
             do {
-                try await SandboxClipboardSync.pushToSandbox(client: client, machineId: machine.id, text: text)
+                try await SandboxClipboardSync.pushToSandbox(
+                    client: client,
+                    machineId: machine.id,
+                    text: text,
+                    autoInstallIfMissing: true
+                )
                 sandboxToolUnsupported = false
                 lastSyncDirectionLabel = "已发送 Mac → 云端"
                 store.showToast(.success, "已将本机剪贴板（\(text.count) 字符）发送到云端桌面，可直接 Ctrl+V 粘贴")
+            } catch SandboxClipboardError.clipboardToolUnavailable {
+                sandboxToolUnsupported = true
+                store.showToast(.info, SandboxClipboardError.clipboardToolUnavailable.localizedDescription)
             } catch {
                 store.showToast(.info, error.localizedDescription)
             }
@@ -350,12 +399,19 @@ struct RemoteDesktopTab: View {
         Task {
             defer { isSyncingClipboard = false }
             do {
-                let remoteText = try await SandboxClipboardSync.pullFromSandbox(client: client, machineId: machine.id)
+                let remoteText = try await SandboxClipboardSync.pullFromSandbox(
+                    client: client,
+                    machineId: machine.id,
+                    autoInstallIfMissing: true
+                )
                 sandboxToolUnsupported = false
                 lastSyncedText = remoteText
                 lastLocalChangeCount = SandboxClipboardSync.writeLocalText(remoteText)
                 lastSyncDirectionLabel = "已拉取 云端 → Mac"
                 store.showToast(.success, "已读取云端剪贴板（\(remoteText.count) 字符）到本机，可直接 ⌘V 粘贴")
+            } catch SandboxClipboardError.clipboardToolUnavailable {
+                sandboxToolUnsupported = true
+                store.showToast(.info, SandboxClipboardError.clipboardToolUnavailable.localizedDescription)
             } catch {
                 store.showToast(.info, error.localizedDescription)
             }
@@ -410,6 +466,7 @@ struct RemoteDesktopTab: View {
                     request: DesktopStreamRequest(viewOnly: viewOnly, ttlSeconds: 3600)
                 )
                 self.streamInfo = stream
+                self.sandboxToolUnsupported = false
                 restartClipboardSyncLoop()
             } catch {
                 store.showToast(.error, error.localizedDescription)

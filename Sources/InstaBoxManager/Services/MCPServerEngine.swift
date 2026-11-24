@@ -522,10 +522,19 @@ public final class MCPServerEngine: Sendable {
                 let direction = try requireString(args, "direction").lowercased()
                 if direction == "push" {
                     let text = try requireString(args, "text")
-                    try await SandboxClipboardSync.pushToSandbox(client: client, machineId: id, text: text)
+                    try await SandboxClipboardSync.pushToSandbox(
+                        client: client,
+                        machineId: id,
+                        text: text,
+                        autoInstallIfMissing: true
+                    )
                     return ("已将 \(text.count) 字符写入沙盒 \(id) 桌面剪贴板。", false)
                 } else if direction == "pull" {
-                    let text = try await SandboxClipboardSync.pullFromSandbox(client: client, machineId: id)
+                    let text = try await SandboxClipboardSync.pullFromSandbox(
+                        client: client,
+                        machineId: id,
+                        autoInstallIfMissing: true
+                    )
                     return (text, false)
                 } else {
                     return ("参数 direction 必须为 push 或 pull。", true)
